@@ -1,74 +1,87 @@
-"use server"
+"use server";
 
-import { prisma } from "@/lib/prisma"
-import { validateBotToken, setWebhook } from "@/modules/telegram/telegram-service"
-import { revalidatePath } from "next/cache"
-// Na prática usaríamos a sessão aqui (auth.js). 
-// Para este momento da Fase 2, vamos usar um tenant fixo do mock.
-
-// Funções criptográficas (Exemplo - Em produção usar lib real com a AUTH_SECRET)
-function encryptSecret(text: string) {
-  // TODO: Implementar AES encryption real usando crypto
-  return Buffer.from(text).toString('base64')
-}
+import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
+import { requireUser, requireTenant, assertRole } from "@/lib/auth/session";
+import { encryptSecret, generateWebhookSecret } from "@/lib/security/crypto";
+import { validateBotToken, setWebhook } from "@/modules/telegram/telegram-service";
 
 export async function connectBotAction(formData: FormData) {
-  const token = formData.get("token")?.toString()
-  const tenantId = formData.get("tenantId")?.toString() || "cl_fake_tenant_id" // Substituir por Auth
+  const user = await requireUser();
+  const { tenant, role } = await requireTenant(user.id);
+  assertRole(role, "MANAGER");
 
-  if (!token) return { error: "Token é obrigatório" }
+  const token = formData.get("token")?.toString().trim();
+  if (!token) return { error: "Token é obrigatório" };
 
   try {
-    // 1. Validar no Telegram
-    const validation = await validateBotToken(token)
+    const validation = await validateBotToken(token);
     if (!validation.success || !validation.bot) {
-      return { error: validation.error || "Token inválido" }
+      return { error: validation.error || "Token inválido" };
     }
 
-    // Como é SaaS, talvez o tenant já tenha bot ou não
-    // Pegar o bot atual ou criar novo
-    let bot = await prisma.bot.findFirst({ where: { tenantId } })
+    const existing = await db.orm.public.Bot.first({ tenantId: tenant.id });
+
+    const bot = existing
+      ? await db.orm.public.Bot.where({ id: existing.id }).update({
+          botToken: encryptSecret(token),
+          username: validation.bot.username,
+          name: validation.bot.first_name,
+          status: "ACTIVE",
+        })
+      : await db.orm.public.Bot.create({
+          tenantId: tenant.id,
+          botToken: encryptSecret(token),
+          username: validation.bot.username,
+          name: validation.bot.first_name,
+          status: "ACTIVE",
+        });
 
     if (!bot) {
-      bot = await prisma.bot.create({
-        data: {
-          tenantId,
-          botToken: encryptSecret(token),
-          username: validation.bot.username,
-          name: validation.bot.first_name,
-        }
-      })
-    } else {
-      bot = await prisma.bot.update({
-        where: { id: bot.id },
-        data: {
-          botToken: encryptSecret(token),
-          username: validation.bot.username,
-          name: validation.bot.first_name,
-        }
-      })
+      return { error: "Não foi possível salvar o bot." };
     }
 
-    // 2. Configurar Webhook
-    const webhookResult = await setWebhook(token, bot.id)
+    const webhookResult = await setWebhook(token, bot.id);
 
-    if (webhookResult.success) {
-      await prisma.telegramWebhook.upsert({
-        where: { botId: bot.id },
-        update: { isActive: true },
-        create: {
-          botId: bot.id,
-          url: "CONFIGURADO",
-          secret: "SECRET_GERADO", // Implementar geração de secret de validação
-          isActive: true
-        }
-      })
-      revalidatePath("/bots")
-      return { success: true, bot: validation.bot }
-    } else {
-      return { error: `Erro no Webhook: ${webhookResult.error}` }
+    if (!webhookResult.success) {
+      return { error: `Erro ao configurar webhook: ${webhookResult.error ?? webhookResult.description}` };
     }
-  } catch (err) {
-    return { error: "Ocorreu um erro inesperado ao conectar o bot." }
+
+    const appUrl = process.env.APP_URL || "http://localhost:3000";
+    const webhookUrl = `${appUrl}/api/webhooks/telegram/${bot.id}`;
+    const existingWebhook = await db.orm.public.TelegramWebhook.first({
+      botId: bot.id,
+    });
+
+    if (existingWebhook) {
+      await db.orm.public.TelegramWebhook.where({
+        id: existingWebhook.id,
+      }).update({ url: webhookUrl, isActive: true });
+    } else {
+      await db.orm.public.TelegramWebhook.create({
+        botId: bot.id,
+        url: webhookUrl,
+        secret: generateWebhookSecret(),
+        isActive: true,
+      });
+    }
+
+    revalidatePath("/bots");
+    return { success: true, bot: validation.bot };
+  } catch {
+    return { error: "Ocorreu um erro inesperado ao conectar o bot." };
   }
+}
+
+export async function removeBotAction(botId: string) {
+  const user = await requireUser();
+  const { tenant, role } = await requireTenant(user.id);
+  assertRole(role, "MANAGER");
+
+  const bot = await db.orm.public.Bot.first({ id: botId, tenantId: tenant.id });
+  if (!bot) return { error: "Bot não encontrado" };
+
+  await db.orm.public.Bot.where({ id: bot.id }).delete();
+  revalidatePath("/bots");
+  return { success: true };
 }

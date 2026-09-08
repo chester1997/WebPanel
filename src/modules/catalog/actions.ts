@@ -1,58 +1,76 @@
-"use server"
+"use server";
 
-import { revalidatePath } from "next/cache"
-import { db } from "@/lib/db"
+import { revalidatePath } from "next/cache";
+import { db } from "@/lib/db";
+import { requireUser, requireTenant } from "@/lib/auth/session";
 
-// Simulando obtenção do tenant atual pelo auth.js
-const getTenantId = () => "cl_fake_tenant_id" 
+function slugify(value: string) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
 
 export async function createCategory(formData: FormData) {
-  const tenantId = getTenantId()
-  const name = formData.get("name")?.toString()
-  const slug = formData.get("slug")?.toString() || name?.toLowerCase().replace(/\\s+/g, '-')
+  const user = await requireUser();
+  const { tenant } = await requireTenant(user.id);
 
-  if (!name || !slug) return { error: "Nome é obrigatório" }
+  const name = formData.get("name")?.toString().trim();
+  if (!name) return { error: "Nome é obrigatório" };
+  const slug = slugify(name);
 
   try {
-    await db.category.create({
-      data: { tenantId, name, slug }
-    })
-    revalidatePath("/categories")
-    return { success: true }
-  } catch (e) {
-    return { error: "Erro ao criar categoria" }
+    await db.orm.public.Category.create({
+      tenantId: tenant.id,
+      name,
+      slug,
+    });
+    revalidatePath("/categories");
+    return { success: true };
+  } catch {
+    return { error: "Erro ao criar categoria" };
   }
 }
 
 export async function createProduct(formData: FormData) {
-  const tenantId = getTenantId()
-  const title = formData.get("title")?.toString()
-  const priceStr = formData.get("price")?.toString()
-  const type = formData.get("type")?.toString() || "DIGITAL"
-  const deliveryType = formData.get("deliveryType")?.toString() || "EXTERNAL_LINK"
-  
-  if (!title || !priceStr) return { error: "Campos obrigatórios faltando" }
+  const user = await requireUser();
+  const { tenant } = await requireTenant(user.id);
+
+  const title = formData.get("title")?.toString().trim();
+  const priceStr = formData.get("price")?.toString();
+  const type = formData.get("type")?.toString() || "DIGITAL";
+  const categoryId = formData.get("categoryId")?.toString() || undefined;
+
+  if (!title || !priceStr) return { error: "Campos obrigatórios faltando" };
+
+  const price = parseFloat(priceStr);
+  if (Number.isNaN(price) || price < 0) {
+    return { error: "Preço inválido" };
+  }
 
   try {
-    const slug = title.toLowerCase().replace(/\\s+/g, '-')
-    const price = parseFloat(priceStr)
+    const slug = slugify(title);
 
-    const product = await db.product.create({
-      data: {
-        tenantId,
-        title,
-        slug,
-        type,
-        deliveryType,
-        prices: {
-          create: { price }
-        }
-      }
-    })
+    const product = await db.orm.public.Product.create({
+      tenantId: tenant.id,
+      categoryId,
+      title,
+      slug,
+      type,
+      deliveryType: "EXTERNAL_LINK",
+      status: "ACTIVE",
+    });
 
-    revalidatePath("/products")
-    return { success: true, product }
-  } catch (e) {
-    return { error: "Erro ao criar produto" }
+    await db.orm.public.ProductPrice.create({
+      productId: product.id,
+      price,
+    });
+
+    revalidatePath("/products");
+    return { success: true, product };
+  } catch {
+    return { error: "Erro ao criar produto" };
   }
 }
