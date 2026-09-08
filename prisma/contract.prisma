@@ -25,7 +25,6 @@ model User {
   isSuperAdmin      Boolean  @default(false)
   createdAt         DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   memberships       Membership[]
   auditLogs         AuditLog[]
   supportTickets    SupportTicket[] @relation("TicketCreator")
@@ -48,7 +47,6 @@ model Tenant {
   status      String   @default("ACTIVE") // ACTIVE, SUSPENDED, TRIAL
   createdAt   DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   memberships Membership[]
 
   // Entidades comerciais e de configuração
@@ -79,7 +77,6 @@ model Membership {
   role      Role     @default(STAFF)
   createdAt DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
@@ -99,7 +96,6 @@ model Plan {
   isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   platformSubscriptions PlatformSubscription[]
 }
 
@@ -129,7 +125,6 @@ model Bot {
   status      String   @default("ACTIVE") // ACTIVE, ERROR, DISABLED
   createdAt   DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   config      BotConfiguration?
   webhook     TelegramWebhook?
@@ -222,7 +217,6 @@ model Product {
   deliveryContent  String?  // ID do grupo/canal, link externo, contentId, etc.
   createdAt        DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   category         Category? @relation(fields: [categoryId], references: [id])
   prices           ProductPrice[]
@@ -272,7 +266,6 @@ model Content {
   status      String   @default("ACTIVE")
   createdAt   DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   seasons     Season[]
   media       Media?   // usado quando type == MOVIE
@@ -327,7 +320,6 @@ model Customer {
   totalSpent       Float    @default(0)
   createdAt        DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   orders           Order[]
   subscriptions    Subscription[]
@@ -358,7 +350,6 @@ model Order {
   status      String   // PENDING, PAID, FAILED, CANCELLED, REFUNDED, EXPIRED
   createdAt   DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   customer    Customer @relation(fields: [customerId], references: [id])
   items       OrderItem[]
@@ -389,7 +380,6 @@ model Payment {
   qrCode     String?
   createdAt  DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
@@ -405,7 +395,6 @@ model PaymentGatewayConnection {
   expiresAt    DateTime?
   createdAt    DateTime  @default(now())
   updatedAt temporal.updatedAt()
-
   tenant       Tenant    @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@unique([tenantId, gateway])
@@ -482,7 +471,6 @@ model SupportTicket {
   status     String   @default("OPEN") // OPEN, IN_PROGRESS, WAITING, CLOSED
   createdAt  DateTime @default(now())
   updatedAt temporal.updatedAt()
-
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   customer   Customer? @relation(fields: [customerId], references: [id])
   user       User?    @relation("TicketCreator", fields: [creatorId], references: [id])
