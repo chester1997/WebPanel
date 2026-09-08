@@ -1,76 +1,82 @@
-import { NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+import { NextRequest, NextResponse } from "next/server";
+import { db } from "@/lib/db";
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { botId: string } }
+  { params }: { params: Promise<{ botId: string }> }
 ) {
   try {
-    const { botId } = params
-    const body = await request.json()
+    const { botId } = await params;
+    const body = await request.json();
 
-    console.log(`[Webhook Telegram] Bot ${botId} recebeu evento:`, body)
-
-    // 1. Validar se o bot existe e está ativo
-    const bot = await prisma.bot.findUnique({
-      where: { id: botId },
-      include: { tenant: true }
-    })
-
+    const bot = await db.orm.public.Bot.first({ id: botId });
     if (!bot) {
-      return NextResponse.json({ error: "Bot not found" }, { status: 404 })
+      return NextResponse.json({ error: "Bot not found" }, { status: 404 });
     }
 
-    // 2. Armazenar o evento para idempotência (WebhookEvent)
-    const updateId = body.update_id?.toString()
+    const webhook = await db.orm.public.TelegramWebhook.first({ botId });
+    const secretHeader = request.headers.get("X-Telegram-Bot-Api-Secret-Token");
+    if (!webhook || !webhook.isActive || secretHeader !== webhook.secret) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const updateId = body.update_id?.toString();
     if (updateId) {
-      const existingEvent = await prisma.webhookEvent.findUnique({
-        where: { provider_eventId: { provider: "TELEGRAM", eventId: updateId } }
-      })
+      const existingEvent = await db.orm.public.WebhookEvent.first({
+        provider: "TELEGRAM",
+        eventId: updateId,
+      });
 
       if (existingEvent) {
-        // Já processado
-        return NextResponse.json({ received: true, status: "already_processed" })
+        return NextResponse.json({ received: true, status: "already_processed" });
       }
 
-      await prisma.webhookEvent.create({
-        data: {
-          tenantId: bot.tenantId,
-          provider: "TELEGRAM",
-          eventId: updateId,
-          payload: body,
-          processed: true, // Em um cenário real, só marcar como true após processar
-          processedAt: new Date()
-        }
-      })
+      await db.orm.public.WebhookEvent.create({
+        tenantId: bot.tenantId,
+        provider: "TELEGRAM",
+        eventId: updateId,
+        payload: body,
+        processed: false,
+      });
     }
 
-    // 3. Processar /start
     if (body.message?.text?.startsWith("/start")) {
-      // Registrar cliente inicial (mesmo antes da compra se necessário, ou enviar link do Mini App)
-      const telegramUser = body.message.from
-      
-      await prisma.customer.upsert({
-        where: { tenantId_telegramId: { tenantId: bot.tenantId, telegramId: telegramUser.id.toString() } },
-        update: {
+      const telegramUser = body.message.from;
+      const telegramId = telegramUser.id.toString();
+
+      const existingCustomer = await db.orm.public.Customer.first({
+        tenantId: bot.tenantId,
+        telegramId,
+      });
+
+      if (existingCustomer) {
+        await db.orm.public.Customer.where({ id: existingCustomer.id }).update({
           name: telegramUser.first_name,
           telegramUsername: telegramUser.username,
-        },
-        create: {
+        });
+      } else {
+        await db.orm.public.Customer.create({
           tenantId: bot.tenantId,
-          telegramId: telegramUser.id.toString(),
+          telegramId,
           name: telegramUser.first_name,
           telegramUsername: telegramUser.username,
-          status: "ACTIVE"
-        }
-      })
-      
-      // TODO: Enviar mensagem de boas vindas com botão para o Web App (Mini App) via fetch pro Telegram
+          status: "ACTIVE",
+        });
+      }
+
+      // TODO: enviar mensagem de boas-vindas com o link do Mini App via Telegram Bot API.
     }
 
-    return NextResponse.json({ received: true })
+    if (updateId) {
+      await db.orm.public.WebhookEvent.where({
+        provider: "TELEGRAM",
+        eventId: updateId,
+      }).update({ processed: true, processedAt: new Date() });
+    }
+
+    return NextResponse.json({ received: true });
   } catch (error) {
-    console.error("[Webhook Telegram] Erro:", error)
-    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 })
+    console.error("[Webhook Telegram] Erro:", error);
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

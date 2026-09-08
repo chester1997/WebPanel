@@ -2,13 +2,15 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { LayoutDashboard, MessageSquare, ShoppingBag, Users, CreditCard, Settings, AppWindow, BarChart } from "lucide-react"
+import { LayoutDashboard, MessageSquare, ShoppingBag, Tag, ClipboardList, Users, CreditCard, Settings, AppWindow, BarChart } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
   { name: "Telegram Bots", href: "/bots", icon: MessageSquare },
   { name: "Produtos", href: "/products", icon: ShoppingBag },
+  { name: "Categorias", href: "/categories", icon: Tag },
   { name: "Conteúdos", href: "/contents", icon: AppWindow },
+  { name: "Pedidos", href: "/orders", icon: ClipboardList },
   { name: "Clientes", href: "/customers", icon: Users },
   { name: "Financeiro", href: "/finance", icon: CreditCard },
   { name: "Marketing", href: "/marketing", icon: BarChart },
@@ -33,8 +35,8 @@ export function Sidebar() {
                 href={item.href}
                 className={`
                   group flex items-center rounded-md px-3 py-2 text-sm font-medium
-                  ${isActive 
-                    ? "bg-zinc-800 text-white" 
+                  ${isActive
+                    ? "bg-zinc-800 text-white"
                     : "text-zinc-400 hover:bg-zinc-800 hover:text-white"
                   }
                 `}
@@ -51,19 +53,6 @@ export function Sidebar() {
             )
           })}
         </nav>
-      </div>
-      <div className="flex shrink-0 bg-zinc-900 p-4">
-        <div className="group block w-full flex-shrink-0">
-          <div className="flex items-center">
-            <div>
-              <div className="inline-block h-9 w-9 rounded-full bg-zinc-700" />
-            </div>
-            <div className="ml-3">
-              <p className="text-sm font-medium text-white">Usuário Ativo</p>
-              <p className="text-xs font-medium text-zinc-400">Ver perfil</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   )

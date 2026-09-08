@@ -1,62 +1,84 @@
-"use client"
-
-import { useState } from "react"
-import { useFormStatus } from "react-dom"
-import { createProduct } from "@/modules/catalog/actions"
+import { requireUser, requireTenant } from "@/lib/auth/session"
+import { db } from "@/lib/db"
+import { ProductForm } from "./product-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Criando..." : "Criar Produto"}
-    </Button>
-  )
-}
+export default async function ProductsPage() {
+  const user = await requireUser()
+  const { tenant } = await requireTenant(user.id)
+  
+  const [products, categories] = await Promise.all([
+    db.orm.public.Product.where({ tenantId: tenant.id }).all(),
+    db.orm.public.Category.where({ tenantId: tenant.id }).all()
+  ])
 
-export default function ProductsPage() {
-  const [msg, setMsg] = useState("")
+  // Buscar os preos separadamente pois o ORM no parece suportar "include" da mesma forma
+  // pelo o que vimos na tipagem padrao
+  const productIds = products.map(p => p.id)
+  const allPrices = productIds.length > 0 
+    ? await db.orm.public.ProductPrice.where(p => p.productId.in(productIds)).all() 
+    : []
 
-  async function clientAction(formData: FormData) {
-    const res = await createProduct(formData)
-    if (res?.error) setMsg(res.error)
-    else setMsg("Produto criado com sucesso!")
+  const pricesByProduct = new Map()
+  for (const price of allPrices) {
+    pricesByProduct.set(price.productId, price)
   }
 
   return (
     <div className="space-y-6">
-      <h2 className="text-2xl font-bold tracking-tight">Produtos</h2>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold tracking-tight">Produtos</h2>
+          <p className="text-zinc-400">Gerencie seu catálogo de produtos e acessos.</p>
+        </div>
+      </div>
       
-      <Card className="bg-zinc-900 border-zinc-800">
-        <CardHeader>
-          <CardTitle className="text-white">Novo Produto</CardTitle>
-          <CardDescription className="text-zinc-400">Adicione um novo produto à sua loja.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={clientAction} className="space-y-4 max-w-sm">
-            <div>
-              <label className="text-sm text-zinc-300">Título</label>
-              <Input name="title" required className="bg-zinc-950 border-zinc-800 text-white" />
-            </div>
-            <div>
-              <label className="text-sm text-zinc-300">Preço (R$)</label>
-              <Input name="price" type="number" step="0.01" required className="bg-zinc-950 border-zinc-800 text-white" />
-            </div>
-            <div>
-              <label className="text-sm text-zinc-300">Tipo</label>
-              <select name="type" className="flex h-10 w-full rounded-md border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-white">
-                <option value="DIGITAL">Produto Digital</option>
-                <option value="SUBSCRIPTION">Assinatura</option>
-                <option value="ACCESS">Acesso (VIP)</option>
-              </select>
-            </div>
-            {msg && <p className="text-sm text-emerald-500">{msg}</p>}
-            <SubmitButton />
-          </form>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-1">
+          <ProductForm categories={categories} />
+        </div>
+        
+        <div className="md:col-span-2">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Meus Produtos</CardTitle>
+              <CardDescription className="text-zinc-400">Produtos disponíveis na sua loja Mini App.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {products.length === 0 && (
+                  <div className="text-center py-8 text-zinc-500 text-sm">
+                    Nenhum produto cadastrado.
+                  </div>
+                )}
+                {products.map(p => {
+                  const cat = categories.find(c => c.id === p.categoryId)
+                  const priceInfo = pricesByProduct.get(p.id)
+
+                  return (
+                    <div key={p.id} className="p-4 border border-zinc-800 rounded-lg flex items-center justify-between bg-zinc-950">
+                      <div>
+                        <h4 className="text-white font-medium">{p.title}</h4>
+                        <p className="text-xs text-zinc-500 mt-1">
+                          {cat?.name || "Sem categoria"} • {p.type}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-emerald-500 font-bold">
+                          R$ {priceInfo?.price.toFixed(2) || "0.00"}
+                        </p>
+                        <span className="text-[10px] uppercase bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full mt-1 inline-block">
+                          {p.status}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

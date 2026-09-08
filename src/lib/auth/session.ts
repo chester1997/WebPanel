@@ -51,20 +51,31 @@ export interface MembershipWithTenant {
 export async function listMemberships(
   userId: string
 ): Promise<MembershipWithTenant[]> {
-  const memberships = await db.orm.public.Membership.where({
-    userId,
-  }).include("tenant").all();
+  const memberships = await db.orm.public.Membership.where({ userId }).all();
+  if (memberships.length === 0) return [];
 
-  return memberships.map((m) => ({
-    membershipId: m.id,
-    role: m.role as Role,
-    tenant: {
-      id: m.tenant.id,
-      name: m.tenant.name,
-      slug: m.tenant.slug,
-      status: m.tenant.status,
-    },
-  }));
+  const tenantIds = memberships.map((m) => m.tenantId);
+  const tenants = await db.orm.public.Tenant.where((t) =>
+    t.id.in(tenantIds)
+  ).all();
+  const tenantById = new Map(tenants.map((t) => [t.id, t]));
+
+  const result: MembershipWithTenant[] = [];
+  for (const m of memberships) {
+    const tenant = tenantById.get(m.tenantId);
+    if (!tenant) continue;
+    result.push({
+      membershipId: m.id,
+      role: m.role as Role,
+      tenant: {
+        id: tenant.id,
+        name: tenant.name,
+        slug: tenant.slug,
+        status: tenant.status,
+      },
+    });
+  }
+  return result;
 }
 
 export interface CurrentTenantContext {

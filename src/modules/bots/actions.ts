@@ -16,8 +16,11 @@ export async function connectBotAction(formData: FormData) {
 
   try {
     const validation = await validateBotToken(token);
-    if (!validation.success || !validation.bot) {
+    if (!validation.success) {
       return { error: validation.error || "Token inválido" };
+    }
+    if (!validation.bot) {
+      return { error: "Token inválido" };
     }
 
     const existing = await db.orm.public.Bot.first({ tenantId: tenant.id });
@@ -41,17 +44,19 @@ export async function connectBotAction(formData: FormData) {
       return { error: "Não foi possível salvar o bot." };
     }
 
-    const webhookResult = await setWebhook(token, bot.id);
+    const existingWebhook = await db.orm.public.TelegramWebhook.first({
+      botId: bot.id,
+    });
+    const webhookSecret = existingWebhook?.secret ?? generateWebhookSecret();
+
+    const webhookResult = await setWebhook(token, bot.id, webhookSecret);
 
     if (!webhookResult.success) {
-      return { error: `Erro ao configurar webhook: ${webhookResult.error ?? webhookResult.description}` };
+      return { error: `Erro ao configurar webhook: ${webhookResult.error}` };
     }
 
     const appUrl = process.env.APP_URL || "http://localhost:3000";
     const webhookUrl = `${appUrl}/api/webhooks/telegram/${bot.id}`;
-    const existingWebhook = await db.orm.public.TelegramWebhook.first({
-      botId: bot.id,
-    });
 
     if (existingWebhook) {
       await db.orm.public.TelegramWebhook.where({
@@ -61,7 +66,7 @@ export async function connectBotAction(formData: FormData) {
       await db.orm.public.TelegramWebhook.create({
         botId: bot.id,
         url: webhookUrl,
-        secret: generateWebhookSecret(),
+        secret: webhookSecret,
         isActive: true,
       });
     }

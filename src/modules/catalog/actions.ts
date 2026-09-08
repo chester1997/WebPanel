@@ -41,7 +41,7 @@ export async function createProduct(formData: FormData) {
   const title = formData.get("title")?.toString().trim();
   const priceStr = formData.get("price")?.toString();
   const type = formData.get("type")?.toString() || "DIGITAL";
-  const categoryId = formData.get("categoryId")?.toString() || undefined;
+  const categoryId = formData.get("categoryId")?.toString() || null;
 
   if (!title || !priceStr) return { error: "Campos obrigatórios faltando" };
 
@@ -55,7 +55,7 @@ export async function createProduct(formData: FormData) {
 
     const product = await db.orm.public.Product.create({
       tenantId: tenant.id,
-      categoryId,
+      categoryId: categoryId || null,
       title,
       slug,
       type,

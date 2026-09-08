@@ -1,50 +1,51 @@
-"use client"
-
-import { useState } from "react"
-import { useFormStatus } from "react-dom"
-import { createCategory } from "@/modules/catalog/actions"
+import { requireUser, requireTenant } from "@/lib/auth/session"
+import { db } from "@/lib/db"
+import { CategoryForm } from "./category-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
+import { Folder } from "lucide-react"
 
-function SubmitButton() {
-  const { pending } = useFormStatus()
-  return (
-    <Button type="submit" disabled={pending}>
-      {pending ? "Salvando..." : "Criar Categoria"}
-    </Button>
-  )
-}
+export default async function CategoriesPage() {
+  const user = await requireUser()
+  const { tenant } = await requireTenant(user.id)
 
-export default function CategoriesPage() {
-  const [msg, setMsg] = useState("")
-
-  async function clientAction(formData: FormData) {
-    const res = await createCategory(formData)
-    if (res?.error) setMsg(res.error)
-    else setMsg("Categoria salva com sucesso!")
-  }
+  const categories = await db.orm.public.Category.where({ tenantId: tenant.id }).all()
 
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Categorias</h2>
       
-      <Card className="bg-zinc-900 border-zinc-800">
-        <CardHeader>
-          <CardTitle className="text-white">Nova Categoria</CardTitle>
-          <CardDescription className="text-zinc-400">Crie seções para organizar seus produtos.</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <form action={clientAction} className="space-y-4 max-w-sm">
-            <div>
-              <label className="text-sm text-zinc-300">Nome da Categoria</label>
-              <Input name="name" required className="bg-zinc-950 border-zinc-800 text-white" />
-            </div>
-            {msg && <p className="text-sm text-emerald-500">{msg}</p>}
-            <SubmitButton />
-          </form>
-        </CardContent>
-      </Card>
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-1">
+          <CategoryForm />
+        </div>
+
+        <div className="md:col-span-2">
+          <Card className="bg-zinc-900 border-zinc-800">
+            <CardHeader>
+              <CardTitle className="text-white">Minhas Categorias</CardTitle>
+              <CardDescription className="text-zinc-400">Organização das prateleiras na loja.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {categories.length === 0 && (
+                  <div className="text-center py-8 text-zinc-500 text-sm">
+                    Nenhuma categoria criada.
+                  </div>
+                )}
+                {categories.map(cat => (
+                  <div key={cat.id} className="p-3 border border-zinc-800 rounded-lg flex items-center gap-3 bg-zinc-950">
+                    <Folder className="w-5 h-5 text-blue-500" />
+                    <div>
+                      <h4 className="text-white font-medium text-sm">{cat.name}</h4>
+                      <p className="text-xs text-zinc-500 mt-0.5">/{cat.slug}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }
