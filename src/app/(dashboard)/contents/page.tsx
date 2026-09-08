@@ -26,7 +26,7 @@ export default async function ContentsPage() {
       
       <div className="grid gap-6 md:grid-cols-3">
         <div className="md:col-span-1">
-          <NewContentForm products={products} />
+          <NewContentForm />
         </div>
         
         <div className="md:col-span-2">
@@ -51,16 +51,6 @@ export default async function ContentsPage() {
                     <div className="flex-1">
                       <h4 className="text-white font-medium">{c.title}</h4>
                       <p className="text-xs text-zinc-400 mt-1 line-clamp-2">{c.description}</p>
-                      <div className="mt-2 flex gap-2">
-                        {c.productId && (
-                          <span className="text-[10px] uppercase bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full">
-                            Produto: {productsMap.get(c.productId)?.title || c.productId}
-                          </span>
-                        )}
-                        <span className="text-[10px] uppercase bg-zinc-800 text-zinc-400 px-2 py-0.5 rounded-full">
-                          Duração: {c.duration}
-                        </span>
-                      </div>
                     </div>
                   </div>
                 ))}

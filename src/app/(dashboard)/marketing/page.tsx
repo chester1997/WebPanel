@@ -9,7 +9,6 @@ export default async function MarketingPage() {
   const { tenant } = await requireTenant(user.id)
   
   const coupons = await db.orm.public.Coupon.where({ tenantId: tenant.id }).all()
-  coupons.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
 
   return (
     <div className="space-y-6">

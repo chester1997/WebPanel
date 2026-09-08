@@ -42,7 +42,7 @@ export default async function BotsPage() {
                       </div>
                     </div>
                   </div>
-                  <RemoveBotButton />
+                  <RemoveBotButton botId={bot.id} />
                 </div>
               ) : (
                 <div className="text-center py-6">
