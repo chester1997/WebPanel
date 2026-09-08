@@ -81,11 +81,16 @@ export async function loginAction(
       password: parsed.data.password,
       redirect: false,
     });
-  } catch (error) {
+  } catch (error: any) {
     if (error instanceof AuthError) {
       return { error: "E-mail ou senha incorretos." };
     }
-    throw error;
+    // Verifica se é o erro de redirecionamento do Next.js (NEXT_REDIRECT)
+    if (error?.message === "NEXT_REDIRECT" || error?.digest?.startsWith("NEXT_REDIRECT")) {
+      throw error;
+    }
+    // Outros erros (ex: banco de dados, AUTH_SECRET, etc)
+    return { error: "Erro interno: " + (error?.message || "Desconhecido") };
   }
 
   redirect("/dashboard");
