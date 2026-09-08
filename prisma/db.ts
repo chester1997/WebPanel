@@ -1,3 +1,5 @@
+import { Temporal } from "@js-temporal/polyfill";
+Object.assign(globalThis, { Temporal });
 import "dotenv/config";
 import postgres from "@prisma/orm-postgres/runtime";
 import type { Contract } from "./contract.d.ts";

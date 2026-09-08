@@ -4,7 +4,7 @@ import { db } from "@/lib/db"
 
 export async function createOrder(tenantId: string, customerId: string, productId: string) {
   try {
-    const product = await db.orm.public.Product.first({ id: productId })
+    const product = await db.orm.public.Product.first({ id: productId, tenantId })
     if (!product) return { error: "Produto indisponível" }
 
     const priceRecord = await db.orm.public.ProductPrice.first({ productId })
@@ -28,7 +28,7 @@ export async function createOrder(tenantId: string, customerId: string, productI
     })
 
     return { success: true, order }
-  } catch (error) {
+  } catch {
     return { error: "Erro ao criar pedido" }
   }
 }
