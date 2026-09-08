@@ -11,16 +11,16 @@ export default function Home() {
         
         <div className="flex gap-4 mt-8">
           <a
-            href="/dashboard"
+            href="/register"
             className="rounded-full bg-white text-black px-6 py-3 font-semibold hover:bg-zinc-200 transition-colors"
           >
-            Acessar Painel
+            Criar minha loja
           </a>
           <a
-            href="/admin"
+            href="/login"
             className="rounded-full bg-zinc-800 text-white px-6 py-3 font-semibold hover:bg-zinc-700 transition-colors border border-zinc-700"
           >
-            Admin Platform
+            Entrar
           </a>
         </div>
       </main>

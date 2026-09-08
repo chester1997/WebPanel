@@ -1,103 +1,87 @@
-import { PrismaClient } from '@prisma/client'
-
-const prisma = new PrismaClient()
+import "dotenv/config";
+import bcrypt from "bcryptjs";
+import { db } from "./db";
 
 async function main() {
-  console.log('Seeding data...')
+  console.log("Seeding structural data...");
 
-  // Planos da Plataforma
-  const starterPlan = await prisma.plan.upsert({
-    where: { id: 'plan_starter' },
-    update: {},
+  await db.orm.public.Plan.upsert({
     create: {
-      id: 'plan_starter',
-      name: 'STARTER',
-      price: 29.90,
-      features: {
-        maxBots: 1,
-        maxProducts: 10,
-        maxCustomers: 100
-      }
-    }
-  })
+      name: "STARTER",
+      price: 29.9,
+      currency: "BRL",
+      features: { maxBots: 1, maxProducts: 10, maxCustomers: 100 },
+    },
+    update: {
+      price: 29.9,
+      features: { maxBots: 1, maxProducts: 10, maxCustomers: 100 },
+    },
+    conflictOn: { name: "STARTER" },
+  });
 
-  const proPlan = await prisma.plan.upsert({
-    where: { id: 'plan_pro' },
-    update: {},
+  await db.orm.public.Plan.upsert({
     create: {
-      id: 'plan_pro',
-      name: 'PRO',
-      price: 59.90,
-      features: {
-        maxBots: 3,
-        maxProducts: 50,
-        maxCustomers: 1000
-      }
-    }
-  })
+      name: "PRO",
+      price: 59.9,
+      currency: "BRL",
+      features: { maxBots: 3, maxProducts: 50, maxCustomers: 1000 },
+    },
+    update: {
+      price: 59.9,
+      features: { maxBots: 3, maxProducts: 50, maxCustomers: 1000 },
+    },
+    conflictOn: { name: "PRO" },
+  });
 
-  const businessPlan = await prisma.plan.upsert({
-    where: { id: 'plan_business' },
-    update: {},
+  await db.orm.public.Plan.upsert({
     create: {
-      id: 'plan_business',
-      name: 'BUSINESS',
-      price: 99.90,
-      features: {
-        maxBots: 10,
-        maxProducts: -1, // ilimitado
-        maxCustomers: -1
-      }
-    }
-  })
+      name: "BUSINESS",
+      price: 99.9,
+      currency: "BRL",
+      features: { maxBots: 10, maxProducts: -1, maxCustomers: -1 },
+    },
+    update: {
+      price: 99.9,
+      features: { maxBots: 10, maxProducts: -1, maxCustomers: -1 },
+    },
+    conflictOn: { name: "BUSINESS" },
+  });
 
-  // Super Admin Inicial
-  const adminEmail = 'admin@platform.com'
-  const admin = await prisma.user.upsert({
-    where: { email: adminEmail },
-    update: {},
-    create: {
-      email: adminEmail,
-      name: 'Super Admin',
-      // Em produção, a senha deve ser hasheada! (ex: bcrypt)
-      // Aqui usamos apenas para scaffold. Na vida real usar NextAuth Credentials
-      passwordHash: 'TODO_HASHED_PASSWORD',
-      status: 'ACTIVE'
-    }
-  })
+  const superAdminEmail = process.env.SUPER_ADMIN_EMAIL;
+  const superAdminPassword = process.env.SUPER_ADMIN_PASSWORD;
 
-  // Criar um tenant vazio de scaffold se não existir
-  // Para que não haja um if tenant === "studio-shorts" no código da app, 
-  // nós apenas criamos um genérico no seed para testes
-  const defaultTenant = await prisma.tenant.upsert({
-    where: { slug: 'studio-shorts' }, // Esse slug é apenas para o seed, não hardcode na app!
-    update: {},
-    create: {
-      name: 'Studio Shorts',
-      slug: 'studio-shorts',
-      status: 'ACTIVE'
-    }
-  })
+  if (!superAdminEmail || !superAdminPassword) {
+    console.warn(
+      "SUPER_ADMIN_EMAIL / SUPER_ADMIN_PASSWORD not set — skipping super admin creation. " +
+        "Set them in .env to seed the initial platform administrator."
+    );
+  } else {
+    const passwordHash = await bcrypt.hash(superAdminPassword, 12);
+    await db.orm.public.User.upsert({
+      create: {
+        email: superAdminEmail,
+        name: "Super Admin",
+        passwordHash,
+        status: "ACTIVE",
+        isSuperAdmin: true,
+      },
+      update: {
+        passwordHash,
+        isSuperAdmin: true,
+      },
+      conflictOn: { email: superAdminEmail },
+    });
+    console.log(`Super admin ready: ${superAdminEmail}`);
+  }
 
-  // Vincular admin como OWNER do tenant de seed (exemplo)
-  await prisma.membership.upsert({
-    where: { userId_tenantId: { userId: admin.id, tenantId: defaultTenant.id } },
-    update: {},
-    create: {
-      userId: admin.id,
-      tenantId: defaultTenant.id,
-      role: 'OWNER'
-    }
-  })
-
-  console.log('Seed finished.')
+  console.log("Seed finished.");
 }
 
 main()
   .catch((e) => {
-    console.error(e)
-    process.exit(1)
+    console.error(e);
+    process.exitCode = 1;
   })
   .finally(async () => {
-    await prisma.$disconnect()
-  })
+    await db.close();
+  });
