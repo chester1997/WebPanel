@@ -4,7 +4,6 @@ import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { 
   LayoutDashboard, 
-  MessageSquare, 
   ShoppingBag, 
   Trophy, 
   Users, 
@@ -13,31 +12,24 @@ import {
   BellRing,
   Bot,
   Megaphone,
-  HandHeart,
   Star,
-  Settings,
-  AppWindow,
-  Tag,
-  ClipboardList
+  BrainCircuit,
+  Sparkles
 } from "lucide-react"
 
 const navigation = [
   { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-  { name: "Bot Telegram", href: "/bots", icon: MessageSquare },
+  { name: "Bot Telegram", href: "/bots", icon: Bot },
   { name: "Produtos", href: "/products", icon: ShoppingBag },
-  { name: "Categorias", href: "/categories", icon: Tag },
-  { name: "Conteúdos", href: "/contents", icon: AppWindow },
   { name: "Ranking Top 10", href: "#", icon: Trophy, badge: "Business" },
   { name: "Clientes", href: "/customers", icon: Users },
-  { name: "Pedidos", href: "/orders", icon: ClipboardList },
   { name: "Financeiro", href: "/finance", icon: CreditCard },
   { name: "Loja Online", href: "#", icon: Globe, badge: "Pro" },
   { name: "Cobrança", href: "#", icon: BellRing },
-  { name: "Assistente IA", href: "#", icon: Bot, badge: "Business" },
+  { name: "Assistente IA", href: "#", icon: BrainCircuit, badge: "Business" },
   { name: "Marketing", href: "/marketing", icon: Megaphone, badge: "Pro" },
-  { name: "Boas-vindas", href: "#", icon: HandHeart },
+  { name: "Boas-vindas", href: "#", icon: Sparkles },
   { name: "Assinatura", href: "#", icon: Star },
-  { name: "Configurações", href: "/settings", icon: Settings },
 ]
 
 export function Sidebar() {
