@@ -64,7 +64,34 @@ export async function POST(
         });
       }
 
-      // TODO: enviar mensagem de boas-vindas com o link do Mini App via Telegram Bot API.
+      const tenant = await db.orm.public.Tenant.first({ id: bot.tenantId });
+      
+      if (tenant) {
+        const appUrl = process.env.APP_URL || "https://web-panel-5gpgznu9c-luizs-projects-0434a0fd.vercel.app";
+        const miniAppUrl = `${appUrl}/store/${tenant.slug}`;
+
+        // Enviar mensagem de boas-vindas com o link do Mini App via Telegram Bot API.
+        await fetch(`https://api.telegram.org/bot${bot.token}/sendMessage`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            chat_id: body.message.chat.id,
+            text: `Olá, ${telegramUser.first_name}! Bem-vindo(a) à nossa loja. Clique no botão abaixo para abrir o catálogo e conhecer nossos produtos.`,
+            reply_markup: {
+              inline_keyboard: [
+                [
+                  {
+                    text: "Abrir App",
+                    web_app: {
+                      url: miniAppUrl
+                    }
+                  }
+                ]
+              ]
+            }
+          })
+        }).catch(err => console.error("Failed to send telegram message:", err));
+      }
     }
 
     if (updateId) {
