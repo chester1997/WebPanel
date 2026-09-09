@@ -117,17 +117,20 @@ model PlatformSubscription {
 // ==========================================
 
 model Bot {
-  id          String   @id @default(uuid())
-  tenantId    String
-  botToken    String   // Criptografado — nunca exposto ao client
-  username    String
-  name        String
-  status      String   @default("ACTIVE") // ACTIVE, ERROR, DISABLED
-  createdAt   DateTime @default(now())
+  id               String   @id @default(uuid())
+  tenantId         String
+  botToken         String   // Criptografado - nunca exposto ao client
+  telegramBotId    String?  @unique
+  username         String
+  name             String
+  status           String   @default("ACTIVE") // ACTIVE, ERROR, DISABLED
+  createdAt        DateTime @default(now())
   updatedAt temporal.updatedAt()
-  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  config      BotConfiguration?
-  webhook     TelegramWebhook?
+  tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  config           BotConfiguration?
+  webhook          TelegramWebhook?
+  miniAppSettings  MiniAppSettings?
+  products         ProductBot[]
 }
 
 model BotConfiguration {
@@ -150,7 +153,10 @@ model TelegramWebhook {
 
 model MiniAppSettings {
   id             String  @id @default(uuid())
-  tenantId       String  @unique
+  tenantId       String  
+  botId          String? @unique
+  slug           String  @unique // Slug gerado unico para a loja deste bot ou tenant
+  buttonText     String? @default("Abrir App")
   storeName      String
   logoUrl        String?
   faviconUrl     String?
@@ -159,6 +165,7 @@ model MiniAppSettings {
   description    String?
 
   tenant         Tenant  @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  bot            Bot?    @relation(fields: [botId], references: [id], onDelete: Cascade)
   banners        MiniAppBanner[]
   sections       MiniAppSection[]
 }
@@ -202,6 +209,17 @@ model Category {
   products    Product[]
 }
 
+model ProductBot {
+  id        String  @id @default(uuid())
+  productId String
+  botId     String
+
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  bot       Bot     @relation(fields: [botId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, botId])
+}
+
 model Product {
   id               String   @id @default(uuid())
   tenantId         String
@@ -215,6 +233,7 @@ model Product {
   periodicity      String?  // ONE_TIME, MONTHLY, QUARTERLY, SEMIANNUAL, YEARLY, LIFETIME
   deliveryType     String   // TELEGRAM_GROUP, TELEGRAM_CHANNEL, EXTERNAL_LINK, MINI_APP_CONTENT, FILE
   deliveryContent  String?  // ID do grupo/canal, link externo, contentId, etc.
+  showInGeneralStore Boolean @default(true)
   createdAt        DateTime @default(now())
   updatedAt temporal.updatedAt()
   tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
@@ -223,6 +242,7 @@ model Product {
   orderItems       OrderItem[]
   customerAccesses CustomerAccess[]
   coupons          Coupon[]
+  bots             ProductBot[]
 }
 
 model ProductPrice {

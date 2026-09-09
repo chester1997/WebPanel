@@ -65,23 +65,40 @@ export async function POST(
       }
 
       const tenant = await db.orm.public.Tenant.first({ id: bot.tenantId });
+      const settings = await db.orm.public.MiniAppSettings.first({ botId: bot.id });
       
       if (tenant) {
         const appUrl = process.env.APP_URL || "https://web-panel-5gpgznu9c-luizs-projects-0434a0fd.vercel.app";
-        const miniAppUrl = `${appUrl}/store/${tenant.slug}`;
+        const miniAppUrl = settings ? `${appUrl}/store/${settings.slug}` : `${appUrl}/store/${tenant.slug}`;
 
         // Enviar mensagem de boas-vindas com o link do Mini App via Telegram Bot API.
-        await fetch(`https://api.telegram.org/bot${bot.token}/sendMessage`, {
+        // O token deve vir desencriptado (mockamos isso buscando direto ou como env, 
+        // mas idealmente voc deve descriptografar bot.botToken. Aqui por simplicidade 
+        // vamos manter o placeholder ou se for um setup real, precisa da chave de decrypt).
+        // No momento bot.botToken foi encriptado em actions.js. Vamos assumir que h uma lib de decrypt.
+        // Para n quebrar, vou usar a bot API chamando com um token placeholder se n der match, 
+        // mas o Webhook n precisa de webhook URL se no souber o token.
+        // TODO: Importante: Adicionar um `process.env.TELEGRAM_BOT_TOKEN` se todos usam um mock,
+        // ou descriptografar `bot.botToken`.
+        // Como o token original n est visvel (criptografado), s podemos usar ele se soubermos a chave.
+        
+        // Em WebPanel (actions), usamos `encryptSecret`. 
+        // Vamos usar a funo correspondente `decryptSecret` para usar o token.
+        
+        const { decryptSecret } = await import("@/lib/security/crypto");
+        const realToken = decryptSecret(bot.botToken);
+
+        await fetch(`https://api.telegram.org/bot${realToken}/sendMessage`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             chat_id: body.message.chat.id,
-            text: `Olá, ${telegramUser.first_name}! Bem-vindo(a) à nossa loja. Clique no botão abaixo para abrir o catálogo e conhecer nossos produtos.`,
+            text: `Olá, ${telegramUser.first_name}! Bem-vindo(a) à nossa loja. Clique no botão abaixo para abrir o catálogo.`,
             reply_markup: {
               inline_keyboard: [
                 [
                   {
-                    text: "Abrir App",
+                    text: settings?.buttonText || "Abrir Loja",
                     web_app: {
                       url: miniAppUrl
                     }

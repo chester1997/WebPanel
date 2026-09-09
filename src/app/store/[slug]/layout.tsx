@@ -13,14 +13,30 @@ export default async function StoreLayout({
 }) {
   const { slug } = await params
 
-  const tenant = await db.orm.public.Tenant.first({ slug })
-  if (!tenant) return notFound()
+  let tenantId = ""
+  let primaryColor = "#f97316"
+  let isBotStore = false
+  let storeName = ""
+  let botUsername = ""
+  let settings = await db.orm.public.MiniAppSettings.first({ slug })
 
-  const settings = await db.orm.public.MiniAppSettings.first({ tenantId: tenant.id })
-  
-  // A cor primária será forçada para laranja conforme o pedido, caso não esteja definida
-  const primaryColor = settings?.primaryColor || "#f97316" // orange-500
-  const botUsername = "@" + (tenant.name.toLowerCase().replace(/\s+/g, '') + "bot") // Fallback caso não tenha bot vinculado
+  if (settings) {
+    tenantId = settings.tenantId
+    isBotStore = true
+    primaryColor = settings.primaryColor || "#f97316"
+    storeName = settings.storeName
+    
+    if (settings.botId) {
+      const bot = await db.orm.public.Bot.first({ id: settings.botId })
+      if (bot) botUsername = "@" + bot.username
+    }
+  } else {
+    const tenant = await db.orm.public.Tenant.first({ slug })
+    if (!tenant) return notFound()
+    tenantId = tenant.id
+    storeName = tenant.name
+    botUsername = "@" + (tenant.name.toLowerCase().replace(/\s+/g, '') + "bot")
+  }
 
   return (
     <div className="min-h-screen bg-[#0f172a] text-white font-sans flex flex-col mx-auto max-w-md relative pb-16 shadow-2xl">
@@ -32,9 +48,9 @@ export default async function StoreLayout({
         </button>
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded flex items-center justify-center font-bold text-xs" style={{ backgroundColor: primaryColor }}>
-            {tenant.name.charAt(0)}
+            {storeName.charAt(0)}
           </div>
-          <h1 className="text-sm font-bold tracking-tight uppercase">APP {tenant.name}</h1>
+          <h1 className="text-sm font-bold tracking-tight uppercase">APP {storeName}</h1>
         </div>
         <button className="text-zinc-300 p-1">
           <Search className="w-5 h-5" />

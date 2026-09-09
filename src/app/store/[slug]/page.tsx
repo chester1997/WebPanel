@@ -5,13 +5,34 @@ import { Trophy, Plus } from "lucide-react"
 export default async function StoreMiniApp({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params
 
-  const tenant = await db.orm.public.Tenant.first({ slug })
-  if (!tenant) return notFound()
+  let tenantId = ""
+  let primaryColor = "#f97316"
+  let isBotStore = false
+  let botId: string | null = null
+  let settings = await db.orm.public.MiniAppSettings.first({ slug })
 
-  const settings = await db.orm.public.MiniAppSettings.first({ tenantId: tenant.id })
-  const primaryColor = settings?.primaryColor || "#f97316" // Orange
+  if (settings) {
+    tenantId = settings.tenantId
+    isBotStore = true
+    botId = settings.botId
+    primaryColor = settings.primaryColor || "#f97316"
+  } else {
+    const tenant = await db.orm.public.Tenant.first({ slug })
+    if (!tenant) return notFound()
+    tenantId = tenant.id
+  }
 
-  const products = await db.orm.public.Product.where({ tenantId: tenant.id, status: "ACTIVE" }).all()
+  let products = []
+  if (isBotStore && botId) {
+    const productBots = await db.orm.public.ProductBot.where({ botId }).all()
+    const pIds = productBots.map((pb) => pb.productId)
+    if (pIds.length > 0) {
+      products = await db.orm.public.Product.where((p) => p.id.in(pIds)).all()
+      products = products.filter((p) => p.status === "ACTIVE")
+    }
+  } else {
+    products = await db.orm.public.Product.where({ tenantId, status: "ACTIVE", showInGeneralStore: true }).all()
+  }
   
   const productIds = products.map(p => p.id)
   const allPrices = productIds.length > 0

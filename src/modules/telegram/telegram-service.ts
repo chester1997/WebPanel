@@ -64,3 +64,35 @@ export async function setWebhook(
     return { success: false, error: "Falha ao configurar webhook" }
   }
 }
+
+export async function setChatMenuButton(
+  token: string,
+  miniAppUrl: string,
+  buttonText: string = "Abrir App"
+): Promise<TelegramServiceResult> {
+  try {
+    const response = await fetch(`${TELEGRAM_API_URL}/bot${token}/setChatMenuButton`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        menu_button: {
+          type: "web_app",
+          text: buttonText,
+          web_app: {
+            url: miniAppUrl,
+          },
+        },
+      }),
+    })
+
+    const data = await response.json()
+    if (!data.ok) {
+      return { success: false, error: data.description ?? "Falha ao configurar botão do Mini App" }
+    }
+    return { success: true }
+  } catch {
+    return { success: false, error: "Falha na comunicação com o Telegram" }
+  }
+}
