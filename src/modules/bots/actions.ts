@@ -1,4 +1,4 @@
-"use server";
+﻿"use server";
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/lib/db";
@@ -12,9 +12,8 @@ export async function connectBotAction(formData: FormData) {
   assertRole(role, "MANAGER");
 
   const token = formData.get("token")?.toString().trim();
-  const displayName = formData.get("displayName")?.toString().trim();
-  const primaryColor = formData.get("primaryColor")?.toString().trim() || "#f97316";
-  const buttonText = formData.get("buttonText")?.toString().trim() || "Abrir Loja";
+  const primaryColor = "#f97316";
+  const buttonText = "Abrir Loja";
   
   if (!token) return { error: "Token é obrigatório" };
 
@@ -62,14 +61,14 @@ export async function connectBotAction(formData: FormData) {
         tenantId: tenant.id,
         botId: bot.id,
         slug,
-        storeName: displayName || validation.bot.first_name,
+        storeName: validation.bot.first_name,
         primaryColor,
         buttonText,
       });
     } else {
       await db.orm.public.MiniAppSettings.where({ id: existingSettings.id }).update({
         slug,
-        storeName: displayName || existingSettings.storeName,
+        storeName: validation.bot.first_name,
         primaryColor,
         buttonText,
       });
@@ -80,12 +79,12 @@ export async function connectBotAction(formData: FormData) {
     const webhookResult = await setWebhook(token, bot.id, webhookSecret);
 
     if (!webhookResult.success) {
-      return { error: `Erro ao configurar webhook: ${webhookResult.error}` };
+      return { error: "Erro ao configurar webhook: " + webhookResult.error };
     }
 
     const appUrl = process.env.APP_URL || "http://localhost:3000";
-    const webhookUrl = `${appUrl}/api/webhooks/telegram/${bot.id}`;
-    const miniAppUrl = `${appUrl}/store/${slug}`;
+    const webhookUrl = appUrl + "/api/webhooks/telegram/" + bot.id;
+    const miniAppUrl = appUrl + "/store/" + slug;
 
     if (existingWebhook) {
       await db.orm.public.TelegramWebhook.where({ id: existingWebhook.id }).update({ url: webhookUrl, isActive: true });

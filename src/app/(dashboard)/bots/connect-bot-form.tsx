@@ -32,25 +32,6 @@ export function ConnectBotForm({ onCancel }: { onCancel?: () => void }) {
           <Label htmlFor="token" className="text-zinc-300">Token do Bot (BotFather)</Label>
           <Input id="token" name="token" required className="font-mono bg-zinc-950 border-zinc-800" placeholder="1234567890:AAH_..." />
         </div>
-        
-        <div className="grid grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="displayName" className="text-zinc-300">Nome Exibido no Mini App</Label>
-            <Input id="displayName" name="displayName" className="bg-zinc-950 border-zinc-800" placeholder="Ex: Minha Loja" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="primaryColor" className="text-zinc-300">Cor Principal</Label>
-            <div className="flex gap-2">
-              <Input id="primaryColor" name="primaryColor" type="color" defaultValue="#f97316" className="w-12 h-10 p-1 bg-zinc-950 border-zinc-800" />
-              <Input type="text" defaultValue="#f97316" disabled className="bg-zinc-950 border-zinc-800 text-zinc-400 font-mono" />
-            </div>
-          </div>
-        </div>
-
-        <div className="space-y-2">
-          <Label htmlFor="buttonText" className="text-zinc-300">Nome do Botão Telegram</Label>
-          <Input id="buttonText" name="buttonText" className="bg-zinc-950 border-zinc-800" defaultValue="Abrir Loja" placeholder="Ex: Abrir Loja" />
-        </div>
       </div>
 
       {result?.error && (
