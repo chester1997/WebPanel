@@ -26,6 +26,7 @@ async function updateSettingsAction(formData: FormData) {
   } else {
     await db.orm.public.MiniAppSettings.create({
       tenantId: tenant.id,
+      slug: tenant.slug, // fallback para o proprio tenant caso crie nas configs gerais
       storeName: storeName || tenant.name,
       primaryColor: primaryColor || "#18181b",
       secondaryColor: secondaryColor || "#09090b",

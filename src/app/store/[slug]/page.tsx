@@ -22,7 +22,7 @@ export default async function StoreMiniApp({ params }: { params: Promise<{ slug:
     tenantId = tenant.id
   }
 
-  let products = []
+  let products: any[] = []
   if (isBotStore && botId) {
     const productBots = await db.orm.public.ProductBot.where({ botId }).all()
     const pIds = productBots.map((pb) => pb.productId)

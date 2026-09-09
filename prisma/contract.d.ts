@@ -33,9 +33,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'0600d2399abc49038f8c9e5c57994dbc3541b611b897080a4511547ecd89f74f'>;
+  StorageHashBase<'2432a31831348baeb5e7f395ff1d087645a9a417b77792fa0125b31c835d9023'>;
 export type ExecutionHash =
-  ExecutionHashBase<'502979d60f2b59a898f48d1eff9a1e33204d2563f51bb812cce974c6a46720b1'>;
+  ExecutionHashBase<'4e7b34f8fd6864f9886629918beb86fb61bb85b4a35e44eb7128ca544ae3b662'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -273,6 +273,7 @@ export type FieldOutputTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly tenantId: CodecTypes['pg/text@1']['output'];
       readonly botToken: CodecTypes['pg/text@1']['output'];
+      readonly telegramBotId: CodecTypes['pg/text@1']['output'] | null;
       readonly username: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
@@ -379,6 +380,9 @@ export type FieldOutputTypes = {
     readonly MiniAppSettings: {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly tenantId: CodecTypes['pg/text@1']['output'];
+      readonly botId: CodecTypes['pg/text@1']['output'] | null;
+      readonly slug: CodecTypes['pg/text@1']['output'];
+      readonly buttonText: CodecTypes['pg/text@1']['output'] | null;
       readonly storeName: CodecTypes['pg/text@1']['output'];
       readonly logoUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly faviconUrl: CodecTypes['pg/text@1']['output'] | null;
@@ -469,8 +473,14 @@ export type FieldOutputTypes = {
       readonly periodicity: CodecTypes['pg/text@1']['output'] | null;
       readonly deliveryType: CodecTypes['pg/text@1']['output'];
       readonly deliveryContent: CodecTypes['pg/text@1']['output'] | null;
+      readonly showInGeneralStore: CodecTypes['pg/bool@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    };
+    readonly ProductBot: {
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly productId: CodecTypes['pg/text@1']['output'];
+      readonly botId: CodecTypes['pg/text@1']['output'];
     };
     readonly ProductPrice: {
       readonly id: CodecTypes['pg/text@1']['output'];
@@ -606,6 +616,7 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly tenantId: CodecTypes['pg/text@1']['input'];
       readonly botToken: CodecTypes['pg/text@1']['input'];
+      readonly telegramBotId: CodecTypes['pg/text@1']['input'] | null;
       readonly username: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
@@ -712,6 +723,9 @@ export type FieldInputTypes = {
     readonly MiniAppSettings: {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly tenantId: CodecTypes['pg/text@1']['input'];
+      readonly botId: CodecTypes['pg/text@1']['input'] | null;
+      readonly slug: CodecTypes['pg/text@1']['input'];
+      readonly buttonText: CodecTypes['pg/text@1']['input'] | null;
       readonly storeName: CodecTypes['pg/text@1']['input'];
       readonly logoUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly faviconUrl: CodecTypes['pg/text@1']['input'] | null;
@@ -802,8 +816,14 @@ export type FieldInputTypes = {
       readonly periodicity: CodecTypes['pg/text@1']['input'] | null;
       readonly deliveryType: CodecTypes['pg/text@1']['input'];
       readonly deliveryContent: CodecTypes['pg/text@1']['input'] | null;
+      readonly showInGeneralStore: CodecTypes['pg/bool@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
+    };
+    readonly ProductBot: {
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly productId: CodecTypes['pg/text@1']['input'];
+      readonly botId: CodecTypes['pg/text@1']['input'];
     };
     readonly ProductPrice: {
       readonly id: CodecTypes['pg/text@1']['input'];
@@ -941,6 +961,7 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly name: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
+      readonly telegramBotId: CodecTypes['pg/text@1']['output'] | null;
       readonly tenantId: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
       readonly username: CodecTypes['pg/text@1']['output'];
@@ -1043,12 +1064,15 @@ export type StorageColumnTypes = {
       readonly type: CodecTypes['pg/text@1']['output'];
     };
     readonly miniAppSettings: {
+      readonly botId: CodecTypes['pg/text@1']['output'] | null;
+      readonly buttonText: CodecTypes['pg/text@1']['output'] | null;
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly faviconUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly logoUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly primaryColor: CodecTypes['pg/text@1']['output'] | null;
       readonly secondaryColor: CodecTypes['pg/text@1']['output'] | null;
+      readonly slug: CodecTypes['pg/text@1']['output'];
       readonly storeName: CodecTypes['pg/text@1']['output'];
       readonly tenantId: CodecTypes['pg/text@1']['output'];
     };
@@ -1131,12 +1155,18 @@ export type StorageColumnTypes = {
       readonly id: CodecTypes['pg/text@1']['output'];
       readonly imageUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly periodicity: CodecTypes['pg/text@1']['output'] | null;
+      readonly showInGeneralStore: CodecTypes['pg/bool@1']['output'];
       readonly slug: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly tenantId: CodecTypes['pg/text@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
       readonly type: CodecTypes['pg/text@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['output'];
+    };
+    readonly productBot: {
+      readonly botId: CodecTypes['pg/text@1']['output'];
+      readonly id: CodecTypes['pg/text@1']['output'];
+      readonly productId: CodecTypes['pg/text@1']['output'];
     };
     readonly productPrice: {
       readonly currency: CodecTypes['pg/text@1']['output'];
@@ -1274,6 +1304,7 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly name: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
+      readonly telegramBotId: CodecTypes['pg/text@1']['input'] | null;
       readonly tenantId: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
       readonly username: CodecTypes['pg/text@1']['input'];
@@ -1376,12 +1407,15 @@ export type StorageColumnInputTypes = {
       readonly type: CodecTypes['pg/text@1']['input'];
     };
     readonly miniAppSettings: {
+      readonly botId: CodecTypes['pg/text@1']['input'] | null;
+      readonly buttonText: CodecTypes['pg/text@1']['input'] | null;
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly faviconUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly logoUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly primaryColor: CodecTypes['pg/text@1']['input'] | null;
       readonly secondaryColor: CodecTypes['pg/text@1']['input'] | null;
+      readonly slug: CodecTypes['pg/text@1']['input'];
       readonly storeName: CodecTypes['pg/text@1']['input'];
       readonly tenantId: CodecTypes['pg/text@1']['input'];
     };
@@ -1464,12 +1498,18 @@ export type StorageColumnInputTypes = {
       readonly id: CodecTypes['pg/text@1']['input'];
       readonly imageUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly periodicity: CodecTypes['pg/text@1']['input'] | null;
+      readonly showInGeneralStore: CodecTypes['pg/bool@1']['input'];
       readonly slug: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly tenantId: CodecTypes['pg/text@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
       readonly type: CodecTypes['pg/text@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz-temporal@1']['input'];
+    };
+    readonly productBot: {
+      readonly botId: CodecTypes['pg/text@1']['input'];
+      readonly id: CodecTypes['pg/text@1']['input'];
+      readonly productId: CodecTypes['pg/text@1']['input'];
     };
     readonly productPrice: {
       readonly currency: CodecTypes['pg/text@1']['input'];
@@ -1827,6 +1867,11 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
+                readonly telegramBotId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
                 readonly username: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -1859,7 +1904,7 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['telegramBotId'] }];
               indexes: readonly [
                 {
                   readonly name: 'bot_tenantId_idx_c93ed4f1';
@@ -2685,6 +2730,25 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: false;
                 };
+                readonly botId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly slug: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly buttonText: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'Abrir App'>;
+                  };
+                };
                 readonly storeName: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -2717,8 +2781,18 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [{ readonly columns: readonly ['tenantId'] }];
-              indexes: readonly [];
+              uniques: readonly [
+                { readonly columns: readonly ['botId'] },
+                { readonly columns: readonly ['slug'] },
+              ];
+              indexes: readonly [
+                {
+                  readonly name: 'miniAppSettings_tenantId_idx_c93ed4f1';
+                  readonly prefix: 'miniAppSettings_tenantId_idx';
+                  readonly columns: readonly ['tenantId'];
+                  readonly unique: false;
+                },
+              ];
               foreignKeys: readonly [
                 {
                   readonly source: {
@@ -2729,6 +2803,18 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'tenant';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'miniAppSettings';
+                    readonly columns: readonly ['botId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'bot';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -3352,6 +3438,15 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
+                readonly showInGeneralStore: {
+                  readonly nativeType: 'bool';
+                  readonly codecId: 'pg/bool@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/bool@1', true>;
+                  };
+                };
                 readonly createdAt: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz-temporal@1';
@@ -3402,6 +3497,67 @@ type ContractBase = Omit<
                   readonly target: {
                     readonly namespaceId: 'public' & NamespaceId;
                     readonly tableName: 'category';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+              ];
+            };
+            readonly productBot: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly productId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+                readonly botId: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [{ readonly columns: readonly ['productId', 'botId'] }];
+              indexes: readonly [
+                {
+                  readonly name: 'productBot_productId_idx_5858600a';
+                  readonly prefix: 'productBot_productId_idx';
+                  readonly columns: readonly ['productId'];
+                  readonly unique: false;
+                },
+                {
+                  readonly name: 'productBot_botId_idx_667017c4';
+                  readonly prefix: 'productBot_botId_idx';
+                  readonly columns: readonly ['botId'];
+                  readonly unique: false;
+                },
+              ];
+              foreignKeys: readonly [
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'productBot';
+                    readonly columns: readonly ['productId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'product';
+                    readonly columns: readonly ['id'];
+                  };
+                },
+                {
+                  readonly source: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'productBot';
+                    readonly columns: readonly ['botId'];
+                  };
+                  readonly target: {
+                    readonly namespaceId: 'public' & NamespaceId;
+                    readonly tableName: 'bot';
                     readonly columns: readonly ['id'];
                   };
                 },
@@ -4206,6 +4362,10 @@ type ContractBase = Omit<
       readonly model: 'MiniAppSection';
     };
     readonly category: { readonly namespace: 'public' & NamespaceId; readonly model: 'Category' };
+    readonly productBot: {
+      readonly namespace: 'public' & NamespaceId;
+      readonly model: 'ProductBot';
+    };
     readonly product: { readonly namespace: 'public' & NamespaceId; readonly model: 'Product' };
     readonly productPrice: {
       readonly namespace: 'public' & NamespaceId;
@@ -4475,6 +4635,10 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly telegramBotId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly username: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -4514,6 +4678,28 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['botId'];
                 };
               };
+              readonly miniAppSettings: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'MiniAppSettings';
+                };
+                readonly cardinality: '1:1';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['botId'];
+                };
+              };
+              readonly products: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ProductBot';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['botId'];
+                };
+              };
               readonly tenant: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -4544,6 +4730,7 @@ type ContractBase = Omit<
                 readonly id: { readonly column: 'id' };
                 readonly tenantId: { readonly column: 'tenantId' };
                 readonly botToken: { readonly column: 'botToken' };
+                readonly telegramBotId: { readonly column: 'telegramBotId' };
                 readonly username: { readonly column: 'username' };
                 readonly name: { readonly column: 'name' };
                 readonly status: { readonly column: 'status' };
@@ -5343,6 +5530,18 @@ type ContractBase = Omit<
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly botId: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly slug: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly buttonText: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly storeName: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -5380,6 +5579,14 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['settingsId'];
                 };
               };
+              readonly bot: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bot' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['botId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
               readonly sections: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -5409,6 +5616,9 @@ type ContractBase = Omit<
               readonly fields: {
                 readonly id: { readonly column: 'id' };
                 readonly tenantId: { readonly column: 'tenantId' };
+                readonly botId: { readonly column: 'botId' };
+                readonly slug: { readonly column: 'slug' };
+                readonly buttonText: { readonly column: 'buttonText' };
                 readonly storeName: { readonly column: 'storeName' };
                 readonly logoUrl: { readonly column: 'logoUrl' };
                 readonly faviconUrl: { readonly column: 'faviconUrl' };
@@ -6011,6 +6221,10 @@ type ContractBase = Omit<
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
+              readonly showInGeneralStore: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/bool@1' };
+              };
               readonly createdAt: {
                 readonly nullable: false;
                 readonly type: {
@@ -6027,6 +6241,17 @@ type ContractBase = Omit<
               };
             };
             readonly relations: {
+              readonly bots: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ProductBot';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['productId'];
+                };
+              };
               readonly category: {
                 readonly to: {
                   readonly namespace: 'public' & NamespaceId;
@@ -6110,8 +6335,55 @@ type ContractBase = Omit<
                 readonly periodicity: { readonly column: 'periodicity' };
                 readonly deliveryType: { readonly column: 'deliveryType' };
                 readonly deliveryContent: { readonly column: 'deliveryContent' };
+                readonly showInGeneralStore: { readonly column: 'showInGeneralStore' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
+              };
+            };
+          };
+          readonly ProductBot: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly productId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly botId: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+            };
+            readonly relations: {
+              readonly bot: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'Bot' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['botId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly product: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Product';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['productId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'productBot';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly productId: { readonly column: 'productId' };
+                readonly botId: { readonly column: 'botId' };
               };
             };
           };
@@ -6722,7 +6994,7 @@ type ContractBase = Omit<
                   readonly namespace: 'public' & NamespaceId;
                   readonly model: 'MiniAppSettings';
                 };
-                readonly cardinality: '1:1';
+                readonly cardinality: '1:N';
                 readonly on: {
                   readonly localFields: readonly ['id'];
                   readonly targetFields: readonly ['tenantId'];
@@ -7378,6 +7650,14 @@ type ContractBase = Omit<
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'instantNow' };
           readonly onUpdate: { readonly kind: 'generator'; readonly id: 'instantNow' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'productBot';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv4' };
         },
         {
           readonly ref: {

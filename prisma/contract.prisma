@@ -51,7 +51,7 @@ model Tenant {
 
   // Entidades comerciais e de configuração
   bots                  Bot[]
-  miniAppSettings       MiniAppSettings?
+  miniAppSettings       MiniAppSettings[]
   products              Product[]
   categories            Category[]
   coupons               Coupon[]

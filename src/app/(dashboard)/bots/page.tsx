@@ -129,7 +129,7 @@ export default async function BotsPage() {
                   <Pencil className="w-4 h-4 mr-2" /> Editar
                 </Button>
                 <div className="flex gap-2">
-                  <Button variant="outline" size="icon" className="bg-transparent border-zinc-700 hover:bg-zinc-800 text-zinc-300">
+                  <Button variant="outline" className="w-9 h-9 p-0 bg-transparent border-zinc-700 hover:bg-zinc-800 text-zinc-300">
                     <Info className="w-4 h-4" />
                   </Button>
                   <RemoveBotButton botId={bot.id} />

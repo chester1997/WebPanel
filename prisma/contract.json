@@ -100,6 +100,10 @@
       "model": "Product",
       "namespace": "public"
     },
+    "productBot": {
+      "model": "ProductBot",
+      "namespace": "public"
+    },
     "productPrice": {
       "model": "ProductPrice",
       "namespace": "public"
@@ -536,6 +540,13 @@
                   "kind": "scalar"
                 }
               },
+              "telegramBotId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "tenantId": {
                 "nullable": false,
                 "type": {
@@ -571,6 +582,36 @@
                 },
                 "to": {
                   "model": "BotConfiguration",
+                  "namespace": "public"
+                }
+              },
+              "miniAppSettings": {
+                "cardinality": "1:1",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "botId"
+                  ]
+                },
+                "to": {
+                  "model": "MiniAppSettings",
+                  "namespace": "public"
+                }
+              },
+              "products": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "botId"
+                  ]
+                },
+                "to": {
+                  "model": "ProductBot",
                   "namespace": "public"
                 }
               },
@@ -621,6 +662,9 @@
                 },
                 "status": {
                   "column": "status"
+                },
+                "telegramBotId": {
+                  "column": "telegramBotId"
                 },
                 "tenantId": {
                   "column": "tenantId"
@@ -1871,6 +1915,20 @@
           },
           "MiniAppSettings": {
             "fields": {
+              "botId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "buttonText": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "description": {
                 "nullable": true,
                 "type": {
@@ -1913,6 +1971,13 @@
                   "kind": "scalar"
                 }
               },
+              "slug": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "storeName": {
                 "nullable": false,
                 "type": {
@@ -1941,6 +2006,21 @@
                 },
                 "to": {
                   "model": "MiniAppBanner",
+                  "namespace": "public"
+                }
+              },
+              "bot": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "botId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Bot",
                   "namespace": "public"
                 }
               },
@@ -1977,6 +2057,12 @@
             },
             "storage": {
               "fields": {
+                "botId": {
+                  "column": "botId"
+                },
+                "buttonText": {
+                  "column": "buttonText"
+                },
                 "description": {
                   "column": "description"
                 },
@@ -1994,6 +2080,9 @@
                 },
                 "secondaryColor": {
                   "column": "secondaryColor"
+                },
+                "slug": {
+                  "column": "slug"
                 },
                 "storeName": {
                   "column": "storeName"
@@ -2903,6 +2992,13 @@
                   "kind": "scalar"
                 }
               },
+              "showInGeneralStore": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
               "slug": {
                 "nullable": false,
                 "type": {
@@ -2947,6 +3043,21 @@
               }
             },
             "relations": {
+              "bots": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "productId"
+                  ]
+                },
+                "to": {
+                  "model": "ProductBot",
+                  "namespace": "public"
+                }
+              },
               "category": {
                 "cardinality": "N:1",
                 "on": {
@@ -3064,6 +3175,9 @@
                 "periodicity": {
                   "column": "periodicity"
                 },
+                "showInGeneralStore": {
+                  "column": "showInGeneralStore"
+                },
                 "slug": {
                   "column": "slug"
                 },
@@ -3085,6 +3199,78 @@
               },
               "namespaceId": "public",
               "table": "product"
+            }
+          },
+          "ProductBot": {
+            "fields": {
+              "botId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "productId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "bot": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "botId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Bot",
+                  "namespace": "public"
+                }
+              },
+              "product": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "productId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Product",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "botId": {
+                  "column": "botId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "productId": {
+                  "column": "productId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "productBot"
             }
           },
           "ProductPrice": {
@@ -4008,7 +4194,7 @@
                 }
               },
               "miniAppSettings": {
-                "cardinality": "1:1",
+                "cardinality": "1:N",
                 "on": {
                   "localFields": [
                     "id"
@@ -4846,6 +5032,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "telegramBotId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "tenantId": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -4896,7 +5087,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "telegramBotId"
+                  ]
+                }
+              ]
             },
             "botConfiguration": {
               "columns": {
@@ -5884,6 +6081,20 @@
             },
             "miniAppSettings": {
               "columns": {
+                "botId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "buttonText": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "Abrir App"
+                  },
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "description": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -5914,6 +6125,11 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "slug": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
                 "storeName": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -5942,9 +6158,35 @@
                     "namespaceId": "public",
                     "tableName": "tenant"
                   }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "botId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "miniAppSettings"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "bot"
+                  }
                 }
               ],
-              "indexes": [],
+              "indexes": [
+                {
+                  "columns": [
+                    "tenantId"
+                  ],
+                  "name": "miniAppSettings_tenantId_idx_c93ed4f1",
+                  "prefix": "miniAppSettings_tenantId_idx",
+                  "unique": false
+                }
+              ],
               "primaryKey": {
                 "columns": [
                   "id"
@@ -5953,7 +6195,12 @@
               "uniques": [
                 {
                   "columns": [
-                    "tenantId"
+                    "botId"
+                  ]
+                },
+                {
+                  "columns": [
+                    "slug"
                   ]
                 }
               ]
@@ -6685,6 +6932,15 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "showInGeneralStore": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
                 "slug": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -6779,6 +7035,92 @@
                 ]
               },
               "uniques": []
+            },
+            "productBot": {
+              "columns": {
+                "botId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "productId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "productId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "productBot"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "product"
+                  }
+                },
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "botId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "productBot"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "bot"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "botId"
+                  ],
+                  "name": "productBot_botId_idx_667017c4",
+                  "prefix": "productBot_botId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "productId"
+                  ],
+                  "name": "productBot_productId_idx_5858600a",
+                  "prefix": "productBot_productId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "productId",
+                    "botId"
+                  ]
+                }
+              ]
             },
             "productPrice": {
               "columns": {
@@ -7721,10 +8063,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "0600d2399abc49038f8c9e5c57994dbc3541b611b897080a4511547ecd89f74f"
+    "storageHash": "2432a31831348baeb5e7f395ff1d087645a9a417b77792fa0125b31c835d9023"
   },
   "execution": {
-    "executionHash": "502979d60f2b59a898f48d1eff9a1e33204d2563f51bb812cce974c6a46720b1",
+    "executionHash": "4e7b34f8fd6864f9886629918beb86fb61bb85b4a35e44eb7128ca544ae3b662",
     "mutations": {
       "defaults": [
         {
@@ -8124,6 +8466,17 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "product"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "productBot"
           }
         },
         {
