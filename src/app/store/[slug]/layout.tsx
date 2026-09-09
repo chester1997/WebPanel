@@ -9,9 +9,9 @@ export default async function StoreLayout({
   params 
 }: { 
   children: ReactNode, 
-  params: { slug: string } 
+  params: Promise<{ slug: string }> 
 }) {
-  const { slug } = params
+  const { slug } = await params
 
   const tenant = await db.orm.public.Tenant.first({ slug })
   if (!tenant) return notFound()

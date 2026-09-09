@@ -2,8 +2,8 @@ import { notFound } from "next/navigation"
 import { db } from "@/lib/db"
 import { Trophy, Plus } from "lucide-react"
 
-export default async function StoreMiniApp({ params }: { params: { slug: string } }) {
-  const { slug } = params
+export default async function StoreMiniApp({ params }: { params: Promise<{ slug: string }> }) {
+  const { slug } = await params
 
   const tenant = await db.orm.public.Tenant.first({ slug })
   if (!tenant) return notFound()
