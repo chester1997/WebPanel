@@ -19,13 +19,13 @@ export default async function CustomersPage() {
     ? await db.orm.public.Product.where(p => p.id.in(productIds)).all()
     : []
 
-  const productsMap = new Map()
-  for(const p of products) productsMap.set(p.id, p)
+  const productsMap = new Map(products.map(p => [p.id, p]))
 
-  const accessesByCustomer = new Map()
+  const accessesByCustomer = new Map<string, typeof accesses>()
   for(const acc of accesses) {
-    if (!accessesByCustomer.has(acc.customerId)) accessesByCustomer.set(acc.customerId, [])
-    accessesByCustomer.get(acc.customerId).push(acc)
+    const list = accessesByCustomer.get(acc.customerId) ?? []
+    list.push(acc)
+    accessesByCustomer.set(acc.customerId, list)
   }
 
   // Sort
@@ -65,7 +65,7 @@ export default async function CustomersPage() {
                     {myAccesses.length === 0 ? (
                       <p className="text-xs text-zinc-600">Nenhum acesso ativo</p>
                     ) : (
-                      myAccesses.map((acc: any) => (
+                      myAccesses.map((acc) => (
                         <div key={acc.id} className="flex justify-between items-center text-xs p-2 bg-zinc-900 rounded-md">
                           <span className="text-zinc-300 truncate pr-2">{productsMap.get(acc.productId)?.title}</span>
                           <span className={`font-medium ${acc.status === 'ACTIVE' ? 'text-emerald-500' : 'text-zinc-500'}`}>{acc.status}</span>

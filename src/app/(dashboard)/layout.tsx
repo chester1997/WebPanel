@@ -18,7 +18,7 @@ export default async function DashboardLayout({
 
   return (
     <div className="flex h-screen w-full bg-[#0b0f19]">
-      <Sidebar />
+      <Sidebar userName={user.name ?? user.email ?? "Usuário"} />
       <div className="flex flex-1 flex-col overflow-hidden">
         <header className="flex h-20 shrink-0 items-center justify-between border-b border-[#1f2235] bg-[#0b0f19] px-8">
           <div className="flex items-center text-white">

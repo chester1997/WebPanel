@@ -65,7 +65,9 @@ export default async function ProductsPage() {
                       </div>
                       <div className="text-right">
                         <p className="text-emerald-500 font-bold">
-                          R$ {priceInfo?.price.toFixed(2) || "0.00"}
+                          {new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(
+                            priceInfo?.price ?? 0
+                          )}
                         </p>
                         <span className="text-[10px] uppercase bg-blue-500/10 text-blue-500 px-2 py-0.5 rounded-full mt-1 inline-block">
                           {p.status}

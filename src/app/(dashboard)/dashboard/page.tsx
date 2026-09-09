@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { requireUser, requireTenant } from "@/lib/auth/session";
 import { db } from "@/lib/db";
 import { 
@@ -11,6 +10,45 @@ import {
   UserPlus,
   Clock
 } from "lucide-react";
+
+interface Tier {
+  name: string;
+  min: number;
+}
+
+const TIERS: Tier[] = [
+  { name: "Bronze", min: 0 },
+  { name: "Silver", min: 1000 },
+  { name: "Gold", min: 5000 },
+  { name: "Platinum", min: 20000 },
+];
+
+function getTierProgress(revenue: number) {
+  let currentIndex = 0;
+  for (let i = TIERS.length - 1; i >= 0; i--) {
+    if (revenue >= TIERS[i].min) {
+      currentIndex = i;
+      break;
+    }
+  }
+  const current = TIERS[currentIndex];
+  const next = TIERS[currentIndex + 1] ?? null;
+
+  if (!next) {
+    return { current, next: null, remaining: 0, percent: 100 };
+  }
+
+  const span = next.min - current.min;
+  const progressInTier = revenue - current.min;
+  const percent = Math.min(100, Math.max(0, (progressInTier / span) * 100));
+
+  return {
+    current,
+    next,
+    remaining: Math.max(0, next.min - revenue),
+    percent,
+  };
+}
 
 async function getDashboardStats(tenantId: string) {
   const [orders, customers, products] = await Promise.all([
@@ -62,6 +100,7 @@ export default async function DashboardPage() {
   const user = await requireUser();
   const { tenant } = await requireTenant(user.id);
   const stats = await getDashboardStats(tenant.id);
+  const tier = getTierProgress(stats.revenue);
 
   return (
     <div className="space-y-8">
@@ -166,29 +205,48 @@ export default async function DashboardPage() {
         </div>
       </div>
       
-      {/* Gamificação / Classificação Placeholder */}
+      {/* Gamificação / Classificação por receita total real */}
       <div className="bg-[#11131e] border border-[#1f2235] p-8 rounded-2xl relative overflow-hidden flex items-center gap-6">
         <div className="w-20 h-20 bg-orange-500/20 rotate-45 rounded-xl flex items-center justify-center shrink-0">
           <div className="w-14 h-14 bg-orange-500 -rotate-45 rounded-lg shadow-[0_0_20px_rgba(249,115,22,0.4)]" />
         </div>
         <div className="flex-1">
           <p className="text-xs font-bold text-zinc-500 tracking-wider uppercase mb-1">Sua Classificação</p>
-          <h3 className="text-2xl font-bold text-orange-500 mb-1">Bronze</h3>
-          <p className="text-sm text-zinc-400 mb-4">Faltam <strong className="text-white">R$ 998,00</strong> para Silver</p>
-          
+          <h3 className="text-2xl font-bold text-orange-500 mb-1">{tier.current.name}</h3>
+          <p className="text-sm text-zinc-400 mb-4">
+            {tier.next ? (
+              <>
+                Faltam{" "}
+                <strong className="text-white">
+                  {tier.remaining.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+                </strong>{" "}
+                para {tier.next.name}
+              </>
+            ) : (
+              "Você atingiu o nível máximo!"
+            )}
+          </p>
+
           <div className="w-full h-2 bg-[#1f2235] rounded-full overflow-hidden">
-            <div className="h-full bg-orange-500 w-[2%]" />
+            <div className="h-full bg-orange-500" style={{ width: `${tier.percent}%` }} />
           </div>
           <div className="flex justify-between mt-2 text-[10px] text-zinc-500 font-medium">
-            <span>R$ {stats.revenue.toFixed(2)}</span>
-            <span>R$ 1.000,00</span>
+            <span>{stats.revenue.toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}</span>
+            <span>
+              {(tier.next?.min ?? tier.current.min).toLocaleString("pt-BR", { style: "currency", currency: "BRL" })}
+            </span>
           </div>
         </div>
         <div className="hidden md:flex flex-col gap-2 text-xs font-semibold">
-          <div className="flex items-center gap-2 text-orange-500"><span className="w-2 h-2 rounded-full bg-orange-500"/> Bronze</div>
-          <div className="flex items-center gap-2 text-zinc-500"><span className="w-2 h-2 rounded-full bg-zinc-600"/> Silver</div>
-          <div className="flex items-center gap-2 text-zinc-500"><span className="w-2 h-2 rounded-full bg-zinc-600"/> Gold</div>
-          <div className="flex items-center gap-2 text-zinc-500"><span className="w-2 h-2 rounded-full bg-zinc-600"/> Platinum</div>
+          {TIERS.map((t) => (
+            <div
+              key={t.name}
+              className={`flex items-center gap-2 ${t.name === tier.current.name ? "text-orange-500" : "text-zinc-500"}`}
+            >
+              <span className={`w-2 h-2 rounded-full ${t.name === tier.current.name ? "bg-orange-500" : "bg-zinc-600"}`} />
+              {t.name}
+            </div>
+          ))}
         </div>
       </div>
 

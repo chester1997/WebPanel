@@ -13,19 +13,14 @@ export default async function StoreLayout({
 }) {
   const { slug } = await params
 
-  let tenantId = ""
-  let primaryColor = "#f97316"
-  let isBotStore = false
   let storeName = ""
   let botUsername = ""
-  let settings = await db.orm.public.MiniAppSettings.first({ slug })
+  const settings = await db.orm.public.MiniAppSettings.first({ slug })
+  const primaryColor = settings?.primaryColor || "#f97316"
 
   if (settings) {
-    tenantId = settings.tenantId
-    isBotStore = true
-    primaryColor = settings.primaryColor || "#f97316"
     storeName = settings.storeName
-    
+
     if (settings.botId) {
       const bot = await db.orm.public.Bot.first({ id: settings.botId })
       if (bot) botUsername = "@" + bot.username
@@ -33,9 +28,7 @@ export default async function StoreLayout({
   } else {
     const tenant = await db.orm.public.Tenant.first({ slug })
     if (!tenant) return notFound()
-    tenantId = tenant.id
     storeName = tenant.name
-    botUsername = "@" + (tenant.name.toLowerCase().replace(/\s+/g, '') + "bot")
   }
 
   return (

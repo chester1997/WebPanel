@@ -81,16 +81,23 @@ export async function loginAction(
       password: parsed.data.password,
       redirect: false,
     });
-  } catch (error: any) {
+  } catch (error) {
     if (error instanceof AuthError) {
       return { error: "E-mail ou senha incorretos." };
     }
-    // Verifica se é o erro de redirecionamento do Next.js (NEXT_REDIRECT)
-    if (error?.message === "NEXT_REDIRECT" || error?.digest?.startsWith("NEXT_REDIRECT")) {
+    // Erro de redirecionamento do Next.js (NEXT_REDIRECT) — não é um erro real, deixa propagar.
+    if (
+      error &&
+      typeof error === "object" &&
+      "digest" in error &&
+      typeof error.digest === "string" &&
+      error.digest.startsWith("NEXT_REDIRECT")
+    ) {
       throw error;
     }
-    // Outros erros (ex: banco de dados, AUTH_SECRET, etc)
-    return { error: "Erro interno: " + (error?.message || "Desconhecido") };
+    // Outros erros (ex: banco de dados fora do ar) — nunca expor detalhes internos ao usuário.
+    console.error("[loginAction] erro inesperado:", error);
+    return { error: "Não foi possível entrar. Tente novamente em instantes." };
   }
 
   redirect("/dashboard");

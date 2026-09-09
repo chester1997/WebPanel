@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { connectBotAction } from "@/modules/bots/actions";
-import { AlertCircle, CheckCircle2, Save } from "lucide-react";
+import { AlertCircle, CheckCircle2 } from "lucide-react";
 
 function SubmitButton() {
   const { pending } = useFormStatus();
