@@ -52,6 +52,9 @@ export async function checkoutCart(slug: string) {
   if (!customer) {
     return { error: "Abra esta loja pelo Mini App do Telegram para finalizar a compra." }
   }
+  if (customer.status === "BANNED") {
+    return { error: "Sua conta foi banida desta loja. Fale com o suporte." }
+  }
 
   const cart = await getCart(slug)
   if (cart.length === 0) return { error: "Seu carrinho está vazio." }

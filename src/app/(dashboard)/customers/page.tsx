@@ -1,21 +1,32 @@
+import Link from "next/link"
 import { requireUser, requireTenant } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { BanCustomerButton } from "./ban-customer-button"
 
-export default async function CustomersPage() {
+export default async function CustomersPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string }>
+}) {
   const user = await requireUser()
   const { tenant } = await requireTenant(user.id)
-  
-  const customers = await db.orm.public.Customer.where({ tenantId: tenant.id }).all()
+  const { tab } = await searchParams
+  const showBanned = tab === "banned"
+
+  const allCustomers = await db.orm.public.Customer.where({ tenantId: tenant.id }).all()
+  const activeCustomers = allCustomers.filter((c) => c.status !== "BANNED")
+  const bannedCustomers = allCustomers.filter((c) => c.status === "BANNED")
+  const customers = showBanned ? bannedCustomers : activeCustomers
 
   // Buscar CustomerAccess
   const customerIds = customers.map(c => c.id)
-  const accesses = customerIds.length > 0 
+  const accesses = customerIds.length > 0
     ? await db.orm.public.CustomerAccess.where(a => a.customerId.in(customerIds)).all()
     : []
-    
+
   const productIds = accesses.map(a => a.productId)
-  const products = productIds.length > 0 
+  const products = productIds.length > 0
     ? await db.orm.public.Product.where(p => p.id.in(productIds)).all()
     : []
 
@@ -34,33 +45,49 @@ export default async function CustomersPage() {
   return (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold tracking-tight">Clientes e Acessos</h2>
-      
+
       <Card className="bg-zinc-900 border-zinc-800">
         <CardHeader>
           <CardTitle className="text-white">Gerenciamento de Clientes</CardTitle>
           <CardDescription className="text-zinc-400">Lista de clientes que interagiram com sua loja ou compraram produtos.</CardDescription>
+          <div className="flex gap-2 pt-2">
+            <Link
+              href="/customers"
+              className={`text-sm px-3 py-1.5 rounded-md font-medium ${!showBanned ? "bg-orange-500/15 text-orange-400" : "text-zinc-500 hover:text-zinc-300"}`}
+            >
+              Ativos ({activeCustomers.length})
+            </Link>
+            <Link
+              href="/customers?tab=banned"
+              className={`text-sm px-3 py-1.5 rounded-md font-medium ${showBanned ? "bg-orange-500/15 text-orange-400" : "text-zinc-500 hover:text-zinc-300"}`}
+            >
+              Banidos ({bannedCustomers.length})
+            </Link>
+          </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {customers.length === 0 && (
-              <div className="col-span-full py-8 text-center text-zinc-500">Nenhum cliente cadastrado.</div>
+              <div className="col-span-full py-8 text-center text-zinc-500">
+                {showBanned ? "Nenhum cliente banido." : "Nenhum cliente cadastrado."}
+              </div>
             )}
             {customers.map(customer => {
               const myAccesses = accessesByCustomer.get(customer.id) || []
-              
+
               return (
                 <div key={customer.id} className="p-4 rounded-xl border border-zinc-800 bg-zinc-950 flex flex-col">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center font-bold text-zinc-300">
                       {(customer.name || customer.telegramUsername || "?").charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-sm text-white">{customer.name || "Sem nome"}</h3>
-                      <p className="text-xs text-zinc-400">@{customer.telegramUsername || "desconhecido"}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm text-white truncate">{customer.name || "Sem nome"}</h3>
+                      <p className="text-xs text-zinc-400 truncate">@{customer.telegramUsername || "desconhecido"} · {customer.telegramId}</p>
                     </div>
                   </div>
-                  
-                  <div className="mt-auto space-y-2">
+
+                  <div className="space-y-2">
                     <h4 className="text-xs font-semibold text-zinc-500 uppercase">Acessos Ativos</h4>
                     {myAccesses.length === 0 ? (
                       <p className="text-xs text-zinc-600">Nenhum acesso ativo</p>
@@ -72,6 +99,10 @@ export default async function CustomersPage() {
                         </div>
                       ))
                     )}
+                  </div>
+
+                  <div className="mt-4 pt-3 border-t border-zinc-800/70">
+                    <BanCustomerButton customerId={customer.id} banned={customer.status === "BANNED"} />
                   </div>
                 </div>
               )

@@ -67,7 +67,9 @@ model Tenant {
   supportTickets        SupportTicket[]
   auditLogs             AuditLog[]
   platformSubscriptions PlatformSubscription[]
+  platformPayments      PlatformPayment[]
   affiliates            Affiliate[]
+  billingReminderSettings BillingReminderSettings?
 }
 
 model Membership {
@@ -97,6 +99,7 @@ model Plan {
   createdAt   DateTime @default(now())
   updatedAt temporal.updatedAt()
   platformSubscriptions PlatformSubscription[]
+  platformPayments      PlatformPayment[]
 }
 
 model PlatformSubscription {
@@ -110,6 +113,24 @@ model PlatformSubscription {
 
   tenant    Tenant   @relation(fields: [tenantId], references: [id])
   plan      Plan     @relation(fields: [planId], references: [id])
+}
+
+// Cobrança PIX de uma assinatura da plataforma (o vendedor pagando a Webi/
+// WebPanel) — gerada com a conta Mercado Pago da própria plataforma, nunca
+// com a conta do tenant.
+model PlatformPayment {
+  id         String   @id @default(uuid())
+  tenantId   String
+  planId     String
+  externalId String?  // ID do pagamento no Mercado Pago
+  amount     Float
+  status     String   @default("PENDING") // PENDING, APPROVED, REJECTED
+  paymentUrl String?
+  createdAt  DateTime @default(now())
+  updatedAt temporal.updatedAt()
+
+  tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  plan       Plan     @relation(fields: [planId], references: [id])
 }
 
 // ==========================================
@@ -134,11 +155,12 @@ model Bot {
 }
 
 model BotConfiguration {
-  id         String  @id @default(uuid())
-  botId      String  @unique
-  welcomeMsg String?
+  id               String  @id @default(uuid())
+  botId            String  @unique
+  welcomeMsg       String?
+  notifyTelegramId String? // Telegram ID do vendedor que recebe aviso de cada venda
 
-  bot        Bot     @relation(fields: [botId], references: [id], onDelete: Cascade)
+  bot              Bot     @relation(fields: [botId], references: [id], onDelete: Cascade)
 }
 
 model TelegramWebhook {
@@ -350,12 +372,17 @@ model Customer {
 }
 
 model CustomerAccess {
-  id         String    @id @default(uuid())
-  customerId String
-  productId  String
-  status     String    // ACTIVE, EXPIRED, REVOKED
-  expiresAt  DateTime?
-  grantedAt  DateTime  @default(now())
+  id                     String    @id @default(uuid())
+  customerId             String
+  productId              String
+  status                 String    // ACTIVE, EXPIRED, REVOKED
+  expiresAt              DateTime?
+  grantedAt              DateTime  @default(now())
+  // Controle de idempotência da régua de cobrança (Cobrança automática) —
+  // evita reenviar o mesmo lembrete de vencimento mais de uma vez.
+  reminder3dSentAt       DateTime?
+  reminder1dSentAt       DateTime?
+  expiredReminderSentAt  DateTime?
 
   customer   Customer  @relation(fields: [customerId], references: [id], onDelete: Cascade)
   product    Product   @relation(fields: [productId], references: [id])
@@ -400,6 +427,10 @@ model Payment {
   qrCode     String?
   createdAt  DateTime @default(now())
   updatedAt temporal.updatedAt()
+  // Controle de idempotência da régua de cobrança de PIX pendente.
+  pixReminder5SentAt  DateTime?
+  pixReminder7SentAt  DateTime?
+  pixReminder10SentAt DateTime?
   tenant     Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
   order      Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
 }
@@ -465,6 +496,25 @@ model Notification {
   createdAt DateTime @default(now())
 
   tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+}
+
+// Régua de mensagens automáticas enviadas pelo bot do tenant aos próprios
+// clientes: lembrete de PIX gerado e não pago, e lembrete de vencimento de
+// acesso. Mensagens aceitam as variáveis {nome}, {produto} e {vencimento}.
+model BillingReminderSettings {
+  id                 String   @id @default(uuid())
+  tenantId           String   @unique
+  pixReminderActive  Boolean  @default(true)
+  pixMsg5            String   @default("Oi {nome}! 👋 Seu PIX para {produto} ainda está aguardando. Copie o código e finalize agora para garantir seu acesso!")
+  pixMsg7            String   @default("⏳ {nome}, o PIX para {produto} continua em aberto. Não perca sua vaga!")
+  pixMsg10           String   @default("⚠️ Última chamada, {nome}! O PIX para {produto} expira em breve. Finalize agora ou gere um novo no app.")
+  planReminderActive Boolean  @default(true)
+  planMsg3d          String   @default("Olá {nome}! Seu plano {produto} vence em 3 dias. Renove agora para não perder o acesso.")
+  planMsg1d          String   @default("Atenção {nome}! Seu plano {produto} vence AMANHÃ. Renove agora!")
+  planMsgExpired     String   @default("{nome}, seu plano {produto} expirou. Renove para continuar com acesso.")
+  updatedAt temporal.updatedAt()
+
+  tenant             Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 }
 
 model Automation {

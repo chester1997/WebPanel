@@ -103,6 +103,39 @@ export async function connectBotAction(formData: FormData) {
   }
 }
 
+export async function updateBotNotificationsAction(formData: FormData) {
+  const user = await requireUser();
+  const { tenant, role } = await requireTenant(user.id);
+  assertRole(role, "MANAGER");
+
+  const botId = formData.get("botId")?.toString();
+  const welcomeMsg = formData.get("welcomeMsg")?.toString().trim() ?? "";
+  const notifyTelegramId = formData.get("notifyTelegramId")?.toString().trim() ?? "";
+
+  if (!botId) return { error: "Bot inválido" };
+
+  const bot = await db.orm.public.Bot.first({ id: botId, tenantId: tenant.id });
+  if (!bot) return { error: "Bot não encontrado" };
+
+  const existing = await db.orm.public.BotConfiguration.first({ botId: bot.id });
+
+  if (existing) {
+    await db.orm.public.BotConfiguration.where({ id: existing.id }).update({
+      welcomeMsg: welcomeMsg || null,
+      notifyTelegramId: notifyTelegramId || null,
+    });
+  } else {
+    await db.orm.public.BotConfiguration.create({
+      botId: bot.id,
+      welcomeMsg: welcomeMsg || null,
+      notifyTelegramId: notifyTelegramId || null,
+    });
+  }
+
+  revalidatePath("/bots");
+  return { success: true };
+}
+
 export async function removeBotAction(botId: string) {
   const user = await requireUser();
   const { tenant, role } = await requireTenant(user.id);

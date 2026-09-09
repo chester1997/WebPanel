@@ -65,6 +65,28 @@ export async function setWebhook(
   }
 }
 
+export async function sendTelegramMessage(
+  token: string,
+  chatId: string,
+  text: string
+): Promise<TelegramServiceResult> {
+  try {
+    const response = await fetch(`${TELEGRAM_API_URL}/bot${token}/sendMessage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ chat_id: chatId, text }),
+    })
+
+    const data = await response.json()
+    if (!data.ok) {
+      return { success: false, error: data.description ?? "Falha ao enviar mensagem" }
+    }
+    return { success: true }
+  } catch {
+    return { success: false, error: "Falha na comunicação com o Telegram" }
+  }
+}
+
 export async function setChatMenuButton(
   token: string,
   miniAppUrl: string,

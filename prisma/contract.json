@@ -16,6 +16,10 @@
       "model": "Automation",
       "namespace": "public"
     },
+    "billingReminderSettings": {
+      "model": "BillingReminderSettings",
+      "namespace": "public"
+    },
     "bot": {
       "model": "Bot",
       "namespace": "public"
@@ -90,6 +94,10 @@
     },
     "plan": {
       "model": "Plan",
+      "namespace": "public"
+    },
+    "platformPayment": {
+      "model": "PlatformPayment",
       "namespace": "public"
     },
     "platformSubscription": {
@@ -503,6 +511,143 @@
               "table": "automation"
             }
           },
+          "BillingReminderSettings": {
+            "fields": {
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pixMsg10": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pixMsg5": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pixMsg7": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "pixReminderActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "planMsg1d": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "planMsg3d": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "planMsgExpired": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "planReminderActive": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/bool@1",
+                  "kind": "scalar"
+                }
+              },
+              "tenantId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "tenant": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "tenantId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Tenant",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "id": {
+                  "column": "id"
+                },
+                "pixMsg10": {
+                  "column": "pixMsg10"
+                },
+                "pixMsg5": {
+                  "column": "pixMsg5"
+                },
+                "pixMsg7": {
+                  "column": "pixMsg7"
+                },
+                "pixReminderActive": {
+                  "column": "pixReminderActive"
+                },
+                "planMsg1d": {
+                  "column": "planMsg1d"
+                },
+                "planMsg3d": {
+                  "column": "planMsg3d"
+                },
+                "planMsgExpired": {
+                  "column": "planMsgExpired"
+                },
+                "planReminderActive": {
+                  "column": "planReminderActive"
+                },
+                "tenantId": {
+                  "column": "tenantId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "billingReminderSettings"
+            }
+          },
           "Bot": {
             "fields": {
               "botToken": {
@@ -696,6 +841,13 @@
                   "kind": "scalar"
                 }
               },
+              "notifyTelegramId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "welcomeMsg": {
                 "nullable": true,
                 "type": {
@@ -728,6 +880,9 @@
                 },
                 "id": {
                   "column": "id"
+                },
+                "notifyTelegramId": {
+                  "column": "notifyTelegramId"
                 },
                 "welcomeMsg": {
                   "column": "welcomeMsg"
@@ -1334,6 +1489,13 @@
                   "kind": "scalar"
                 }
               },
+              "expiredReminderSentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
               "expiresAt": {
                 "nullable": true,
                 "type": {
@@ -1359,6 +1521,20 @@
                 "nullable": false,
                 "type": {
                   "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "reminder1dSentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "reminder3dSentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
                   "kind": "scalar"
                 }
               },
@@ -1407,6 +1583,9 @@
                 "customerId": {
                   "column": "customerId"
                 },
+                "expiredReminderSentAt": {
+                  "column": "expiredReminderSentAt"
+                },
                 "expiresAt": {
                   "column": "expiresAt"
                 },
@@ -1418,6 +1597,12 @@
                 },
                 "productId": {
                   "column": "productId"
+                },
+                "reminder1dSentAt": {
+                  "column": "reminder1dSentAt"
+                },
+                "reminder3dSentAt": {
+                  "column": "reminder3dSentAt"
                 },
                 "status": {
                   "column": "status"
@@ -2484,6 +2669,27 @@
                   "kind": "scalar"
                 }
               },
+              "pixReminder10SentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "pixReminder5SentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "pixReminder7SentAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
               "qrCode": {
                 "nullable": true,
                 "type": {
@@ -2570,6 +2776,15 @@
                 },
                 "paymentUrl": {
                   "column": "paymentUrl"
+                },
+                "pixReminder10SentAt": {
+                  "column": "pixReminder10SentAt"
+                },
+                "pixReminder5SentAt": {
+                  "column": "pixReminder5SentAt"
+                },
+                "pixReminder7SentAt": {
+                  "column": "pixReminder7SentAt"
                 },
                 "qrCode": {
                   "column": "qrCode"
@@ -2775,6 +2990,21 @@
               }
             },
             "relations": {
+              "platformPayments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "planId"
+                  ]
+                },
+                "to": {
+                  "model": "PlatformPayment",
+                  "namespace": "public"
+                }
+              },
               "platformSubscriptions": {
                 "cardinality": "1:N",
                 "on": {
@@ -2820,6 +3050,138 @@
               },
               "namespaceId": "public",
               "table": "plan"
+            }
+          },
+          "PlatformPayment": {
+            "fields": {
+              "amount": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/float8@1",
+                  "kind": "scalar"
+                }
+              },
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              },
+              "externalId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "paymentUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "planId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "tenantId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "kind": "scalar"
+                }
+              }
+            },
+            "relations": {
+              "plan": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "planId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Plan",
+                  "namespace": "public"
+                }
+              },
+              "tenant": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "tenantId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Tenant",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "amount": {
+                  "column": "amount"
+                },
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "externalId": {
+                  "column": "externalId"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "paymentUrl": {
+                  "column": "paymentUrl"
+                },
+                "planId": {
+                  "column": "planId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "tenantId": {
+                  "column": "tenantId"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                }
+              },
+              "namespaceId": "public",
+              "table": "platformPayment"
             }
           },
           "PlatformSubscription": {
@@ -4103,6 +4465,21 @@
                   "namespace": "public"
                 }
               },
+              "billingReminderSettings": {
+                "cardinality": "1:1",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "tenantId"
+                  ]
+                },
+                "to": {
+                  "model": "BillingReminderSettings",
+                  "namespace": "public"
+                }
+              },
               "bots": {
                 "cardinality": "1:N",
                 "on": {
@@ -4265,6 +4642,21 @@
                 },
                 "to": {
                   "model": "Payment",
+                  "namespace": "public"
+                }
+              },
+              "platformPayments": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "tenantId"
+                  ]
+                },
+                "to": {
+                  "model": "PlatformPayment",
                   "namespace": "public"
                 }
               },
@@ -4997,6 +5389,129 @@
               },
               "uniques": []
             },
+            "billingReminderSettings": {
+              "columns": {
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "pixMsg10": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "⚠️ Última chamada, {nome}! O PIX para {produto} expira em breve. Finalize agora ou gere um novo no app."
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "pixMsg5": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "Oi {nome}! 👋 Seu PIX para {produto} ainda está aguardando. Copie o código e finalize agora para garantir seu acesso!"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "pixMsg7": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "⏳ {nome}, o PIX para {produto} continua em aberto. Não perca sua vaga!"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "pixReminderActive": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "planMsg1d": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "Atenção {nome}! Seu plano {produto} vence AMANHÃ. Renove agora!"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "planMsg3d": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "Olá {nome}! Seu plano {produto} vence em 3 dias. Renove agora para não perder o acesso."
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "planMsgExpired": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "{nome}, seu plano {produto} expirou. Renove para continuar com acesso."
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "planReminderActive": {
+                  "codecId": "pg/bool@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": true
+                  },
+                  "nativeType": "bool",
+                  "nullable": false
+                },
+                "tenantId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "tenantId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "billingReminderSettings"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "tenant"
+                  }
+                }
+              ],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": [
+                {
+                  "columns": [
+                    "tenantId"
+                  ]
+                }
+              ]
+            },
             "bot": {
               "columns": {
                 "botToken": {
@@ -5106,6 +5621,11 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "notifyTelegramId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "welcomeMsg": {
                   "codecId": "pg/text@1",
@@ -5552,6 +6072,11 @@
                   "nativeType": "text",
                   "nullable": false
                 },
+                "expiredReminderSentAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "expiresAt": {
                   "codecId": "pg/timestamptz-temporal@1",
                   "nativeType": "timestamptz",
@@ -5575,6 +6100,16 @@
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "reminder1dSentAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "reminder3dSentAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
                 },
                 "status": {
                   "codecId": "pg/text@1",
@@ -6531,6 +7066,21 @@
                   "nativeType": "text",
                   "nullable": true
                 },
+                "pixReminder10SentAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "pixReminder5SentAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
+                "pixReminder7SentAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
+                },
                 "qrCode": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
@@ -6784,6 +7334,122 @@
                   ]
                 }
               ]
+            },
+            "platformPayment": {
+              "columns": {
+                "amount": {
+                  "codecId": "pg/float8@1",
+                  "nativeType": "float8",
+                  "nullable": false
+                },
+                "createdAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "externalId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "id": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "paymentUrl": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
+                "planId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "PENDING"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "tenantId": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz-temporal@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                }
+              },
+              "foreignKeys": [
+                {
+                  "onDelete": "cascade",
+                  "source": {
+                    "columns": [
+                      "tenantId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "platformPayment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "tenant"
+                  }
+                },
+                {
+                  "source": {
+                    "columns": [
+                      "planId"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "platformPayment"
+                  },
+                  "target": {
+                    "columns": [
+                      "id"
+                    ],
+                    "namespaceId": "public",
+                    "tableName": "plan"
+                  }
+                }
+              ],
+              "indexes": [
+                {
+                  "columns": [
+                    "planId"
+                  ],
+                  "name": "platformPayment_planId_idx_5b32079a",
+                  "prefix": "platformPayment_planId_idx",
+                  "unique": false
+                },
+                {
+                  "columns": [
+                    "tenantId"
+                  ],
+                  "name": "platformPayment_tenantId_idx_c93ed4f1",
+                  "prefix": "platformPayment_tenantId_idx",
+                  "unique": false
+                }
+              ],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
             },
             "platformSubscription": {
               "columns": {
@@ -8063,10 +8729,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "2432a31831348baeb5e7f395ff1d087645a9a417b77792fa0125b31c835d9023"
+    "storageHash": "c3c2d3ee2d708ad5dea5700af80c9153b2d7d4add254855e5d25b25a0be92154"
   },
   "execution": {
-    "executionHash": "4e7b34f8fd6864f9886629918beb86fb61bb85b4a35e44eb7128ca544ae3b662",
+    "executionHash": "638b5569d0bdf9449746a69d15e89ac308dc32f878121a73c9cfe43a90748681",
     "mutations": {
       "defaults": [
         {
@@ -8100,6 +8766,32 @@
             "column": "id",
             "namespace": "public",
             "table": "automation"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "billingReminderSettings"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "instantNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "instantNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "billingReminderSettings"
           }
         },
         {
@@ -8429,6 +9121,32 @@
             "column": "updatedAt",
             "namespace": "public",
             "table": "plan"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv4",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "platformPayment"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "instantNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "instantNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "platformPayment"
           }
         },
         {

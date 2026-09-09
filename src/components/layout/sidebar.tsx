@@ -25,7 +25,7 @@ const navigation = [
   { name: "Clientes", href: "/customers", icon: Users },
   { name: "Financeiro", href: "/finance", icon: CreditCard },
   { name: "Loja Online", icon: Globe, badge: "Pro" },
-  { name: "Cobrança", icon: BellRing, badge: "Em breve" },
+  { name: "Cobrança", href: "/cobranca", icon: BellRing },
   { name: "Assistente IA", icon: BrainCircuit, badge: "Business" },
   { name: "Marketing", href: "/marketing", icon: Megaphone },
   { name: "Boas-vindas", icon: Sparkles, badge: "Em breve" },

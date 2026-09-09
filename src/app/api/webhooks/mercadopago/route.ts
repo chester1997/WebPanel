@@ -78,9 +78,93 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    if (!payment || !tenantId || !payment.external_reference) {
-      // Nenhuma conta conectada reconhece este pagamento — não há tenant
-      // real para persistir com segurança (WebhookEvent exige um).
+    // Nenhuma conta de tenant reconheceu o pagamento — pode ser uma cobrança
+    // de assinatura da própria plataforma (o vendedor pagando a Webi/
+    // WebPanel), gerada com a conta Mercado Pago da plataforma.
+    let isPlatformPayment = false;
+    if (!payment) {
+      const platformToken = process.env.MERCADOPAGO_PLATFORM_ACCESS_TOKEN;
+      if (platformToken) {
+        const found = await fetchPaymentWithConnection(paymentId, platformToken);
+        if (found?.external_reference?.startsWith("platform_sub:")) {
+          payment = found;
+          isPlatformPayment = true;
+        }
+      }
+    }
+
+    if (!payment || !payment.external_reference) {
+      // Nenhuma conta reconhece este pagamento — não há tenant real para
+      // persistir com segurança (WebhookEvent exige um).
+      return NextResponse.json({ received: true, status: "unmatched" });
+    }
+
+    if (isPlatformPayment) {
+      const platformPaymentId = payment.external_reference.slice("platform_sub:".length);
+      const platformPayment = await db.orm.public.PlatformPayment.first({ id: platformPaymentId });
+      if (!platformPayment) {
+        return NextResponse.json({ received: true, status: "platform_payment_not_found" });
+      }
+
+      tenantId = platformPayment.tenantId;
+      const newStatus =
+        payment.status === "approved"
+          ? "APPROVED"
+          : payment.status === "rejected"
+            ? "REJECTED"
+            : "PENDING";
+
+      await db.orm.public.PlatformPayment.where({ id: platformPayment.id }).update({
+        externalId: String(payment.id),
+        status: newStatus,
+      });
+
+      if (newStatus === "APPROVED") {
+        const existingSub = await db.orm.public.PlatformSubscription.first({ tenantId });
+        const base =
+          existingSub && new Date(existingSub.expiresAt).getTime() > Date.now()
+            ? new Date(existingSub.expiresAt)
+            : new Date();
+        const expiresAt = new Date(base.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+        if (existingSub) {
+          await db.orm.public.PlatformSubscription.where({ id: existingSub.id }).update({
+            planId: platformPayment.planId,
+            status: "ACTIVE",
+            expiresAt,
+            renewalAt: expiresAt,
+          });
+        } else {
+          await db.orm.public.PlatformSubscription.create({
+            tenantId,
+            planId: platformPayment.planId,
+            status: "ACTIVE",
+            expiresAt,
+            renewalAt: expiresAt,
+          });
+        }
+      }
+
+      if (existingEvent) {
+        await db.orm.public.WebhookEvent.where({ id: existingEvent.id }).update({
+          processed: true,
+          processedAt: new Date(),
+        });
+      } else {
+        await db.orm.public.WebhookEvent.create({
+          tenantId,
+          provider: "MERCADO_PAGO",
+          eventId: paymentId,
+          payload: { paymentId: payment.id, status: payment.status, kind: "platform_subscription" },
+          processed: true,
+          processedAt: new Date(),
+        });
+      }
+
+      return NextResponse.json({ success: true });
+    }
+
+    if (!tenantId) {
       return NextResponse.json({ received: true, status: "unmatched" });
     }
 

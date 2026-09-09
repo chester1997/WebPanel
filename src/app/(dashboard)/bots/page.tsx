@@ -2,6 +2,7 @@ import { requireUser, requireTenant } from "@/lib/auth/session"
 import { db } from "@/lib/db"
 import { ConnectBotForm } from "./connect-bot-form"
 import { RemoveBotButton } from "./remove-bot-button"
+import { BotConfigForm } from "./bot-config-form"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { BotIcon, ExternalLink, Globe } from "lucide-react"
 import { Button } from "@/components/ui/button"
@@ -18,6 +19,7 @@ export default async function BotsPage() {
   const bots = await db.orm.public.Bot.where({ tenantId: tenant.id, status: "ACTIVE" }).all()
   const bot = bots[0] ?? null
   const miniAppSettings = bot ? await db.orm.public.MiniAppSettings.first({ botId: bot.id }) : null
+  const botConfig = bot ? await db.orm.public.BotConfiguration.first({ botId: bot.id }) : null
 
   const appUrl = process.env.APP_URL || "http://localhost:3000"
   const generalStoreUrl = `${appUrl}/store/${tenant.slug}`
@@ -128,7 +130,27 @@ export default async function BotsPage() {
               </div>
             </CardContent>
           </Card>
-        ) : (
+        ) : null}
+
+        {bot && (
+          <Card className="bg-[#11131e] border-zinc-800/50">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-white text-base">Boas-vindas e notificações</CardTitle>
+              <CardDescription className="text-zinc-400">
+                Mensagem enviada ao cliente no /start e aviso de venda para você.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <BotConfigForm
+                botId={bot.id}
+                welcomeMsg={botConfig?.welcomeMsg ?? ""}
+                notifyTelegramId={botConfig?.notifyTelegramId ?? ""}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {!bot && (
           <div className="pt-4">
             <h3 className="text-lg font-medium text-white mb-4">Adicionar Bot Telegram</h3>
             <ConnectBotForm />

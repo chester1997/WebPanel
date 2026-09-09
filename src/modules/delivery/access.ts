@@ -1,7 +1,23 @@
 import { db } from "@/lib/db";
 import { decryptSecret } from "@/lib/security/crypto";
+import { sendTelegramMessage } from "@/modules/telegram/telegram-service";
 
 const TELEGRAM_API_URL = "https://api.telegram.org";
+
+const PERIODICITY_DAYS: Record<string, number> = {
+  MONTHLY: 30,
+  QUARTERLY: 90,
+  SEMIANNUAL: 180,
+  YEARLY: 365,
+};
+
+/** Data de expiração do acesso a partir da periodicidade do produto — null para ONE_TIME/LIFETIME/ACCESS avulso. */
+function computeAccessExpiry(periodicity: string | null | undefined): Date | null {
+  if (!periodicity) return null;
+  const days = PERIODICITY_DAYS[periodicity];
+  if (!days) return null;
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+}
 
 /**
  * Grants access to every product in a paid order and notifies the customer
@@ -37,18 +53,23 @@ export async function grantAccessAndNotify(orderId: string) {
         customerId: order.customerId,
         productId: item.productId,
       });
+      const expiresAt = computeAccessExpiry(productById.get(item.productId)?.periodicity);
 
       if (existing) {
-        if (existing.status !== "ACTIVE") {
-          await db.orm.public.CustomerAccess.where({ id: existing.id }).update({
-            status: "ACTIVE",
-          });
-        }
+        await db.orm.public.CustomerAccess.where({ id: existing.id }).update({
+          status: "ACTIVE",
+          expiresAt,
+          // renova a régua de vencimento para o novo ciclo pago
+          reminder3dSentAt: null,
+          reminder1dSentAt: null,
+          expiredReminderSentAt: null,
+        });
       } else {
         await db.orm.public.CustomerAccess.create({
           customerId: order.customerId,
           productId: item.productId,
           status: "ACTIVE",
+          expiresAt,
         });
       }
     }
@@ -87,6 +108,16 @@ export async function grantAccessAndNotify(orderId: string) {
           text: deliveryMessage,
         }),
       });
+
+      const config = await db.orm.public.BotConfiguration.first({ botId: bot.id });
+      if (config?.notifyTelegramId) {
+        const buyerLabel = customer.name || customer.telegramUsername || customer.telegramId;
+        await sendTelegramMessage(
+          botToken,
+          config.notifyTelegramId,
+          `💰 Nova venda!\n\nCliente: ${buyerLabel}\nProduto(s): ${productNames}\nValor: R$ ${order.totalAmount.toFixed(2)}`
+        );
+      }
     }
 
     return { success: true };
